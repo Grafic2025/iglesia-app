@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "342047063572",
+    "project_id": "iglesia-app-88c7d",
+    "storage_bucket": "iglesia-app-88c7d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:342047063572:android:22c6c59233549e301a3101",
+        "android_client_info": {
+          "package_name": "com.grafic2026.iglesiaapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1WAHKH132ByOr5cYcHxBpKw8FoPBqmDo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
