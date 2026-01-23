@@ -7,7 +7,8 @@
       },
       "env": {
         "EXPO_USE_GRADLE_8": "true"
-      }
+      },
+      "channel": "development"
     },
     "production": {
       "android": {
@@ -15,7 +16,8 @@
       },
       "env": {
         "EXPO_USE_GRADLE_8": "true"
-      }
+      },
+      "channel": "production"
     }
   }
 }
