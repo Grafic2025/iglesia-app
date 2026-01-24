@@ -39,7 +39,7 @@ export async function registerForPushNotifications() {
       alert('❌ Error Supabase: ' + error.message);
     } else {
       // Este alert te confirmará que POR FIN funcionó
-      alert('✅ Token registrado: ' + token);
+      //alert('✅ Token registrado: ' + token);
     }
   } catch (e) {
     alert('❌ Error fatal: ' + e);
