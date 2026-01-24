@@ -64,53 +64,54 @@ export default function Index() {
   }
 };
 
-  const handleScan = async (data: string) => {
-    if (data === 'ASISTENCIA_IGLESIA') {
-      const ahora = new Date();
-      const fechaHoy = ahora.toISOString().split('T')[0];
-      const hora = ahora.getHours();
-      const minutos = ahora.getMinutes();
-      
-      let bloque = "Extraoficial";
-      if (hora >= 7 && hora <= 10) bloque = "09:00";
-      else if (hora >= 11 && hora <= 14) bloque = "11:00";
-      else if (hora >= 18 && hora <= 22) bloque = "20:00";
-
-      try {
-        const userId = await AsyncStorage.getItem('usuario_id');
-
-        const { data: existe, error: errorCheck } = await supabase
-          .from('asistencias')
-          .select('id')
-          .eq('miembro_id', userId)
-          .eq('fecha', fechaHoy)
-          .maybeSingle();
-
-        if (existe) {
-          Alert.alert("Aviso", "Ya registraste tu asistencia hoy.");
-          setScanned(false);
-          return;
-        }
-
-        const { error } = await supabase
-          .from('asistencias')
-          .insert([{ 
-            miembro_id: userId, 
-            horario_reunion: bloque, 
-            hora_entrada: `${hora}:${minutos < 10 ? '0'+minutos : minutos}`, 
-            fecha: fechaHoy 
-          }]);
-
-        if (error) throw error;
-        Alert.alert("✅ Éxito", `Asistencia marcada: ${bloque}`);
-      } catch (err: any) {
-        Alert.alert("❌ Error", err.message);
-      }
-    } else {
-      Alert.alert("QR Incorrecto", "Este código no es válido para la asistencia.");
-      setScanned(false);
+ const handleScan = async (data: string) => {
+  if (data === 'ASISTENCIA_IGLESIA') {
+    // 1. OBTENER HORA REAL ARGENTINA
+    const ahoraLocal = new Date();
+    // Forzamos la hora de Argentina usando el string de locación
+    const horaArgentina = JSON.parse(
+      JSON.stringify(ahoraLocal.toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" }))
+    );
+    const dateArg = new Date(horaArgentina);
+    
+    const hora = dateArg.getHours();
+    const minutos = dateArg.getMinutes();
+    const fechaHoy = dateArg.toISOString().split('T')[0];
+    
+    // 2. DETERMINAR EL BLOQUE (Rangos amplios para evitar el "Extraoficial")
+    let bloque = "Extraoficial";
+    
+    // Mañana: de 08:00 a 10:00 -> Bloque 09:00
+    if (hora >= 8 && hora < 10) {
+      bloque = "09:00";
+    } 
+    // Mediodía: de 10:00 a 12:00 -> Bloque 11:00
+    else if (hora >= 11 && hora <= 12) {
+      bloque = "11:00";
+    } 
+    // Noche: de 19:00 a 21:00 -> Bloque 20:00
+    else if (hora >= 19 && hora < 21) {
+      bloque = "20:00";
     }
-  };
+
+    // 3. GUARDAR EN SUPABASE
+    try {
+      const userId = await AsyncStorage.getItem('usuario_id');
+      const { error } = await supabase.from('asistencias').insert([{
+        miembro_id: userId,
+        horario_reunion: bloque, // Ahora coincidirá con el Admin
+        fecha: fechaHoy,
+        hora_entrada: `${hora.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`
+      }]);
+
+      if (error) throw error;
+      Alert.alert("¡Éxito!", `Asistencia registrada para las ${bloque}`);
+      setScanned(true);
+    } catch (err) {
+      Alert.alert("Error", "No se pudo registrar la asistencia.");
+    }
+  }
+};
 
   // --- RENDERIZADO ---
 
