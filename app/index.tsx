@@ -32,29 +32,37 @@ export default function Index() {
   };
 
   const manejarRegistro = async () => {
-    if (!nombre.trim() || !apellido.trim()) {
-      return Alert.alert("Error", "Por favor, completa tu nombre y apellido");
-    }
+  if (!nombre.trim() || !apellido.trim()) {
+    return Alert.alert("Error", "Por favor, completa tu nombre y apellido");
+  }
 
-    try {
-      const token = await registerForPushNotifications();
-      const { data, error } = await supabase
-        .from('miembros')
-        .insert([{ nombre, apellido, token_notificacion: token }])
-        .select()
-        .single();
+  try {
+    // Obtenemos el token de forma silenciosa
+    const token = await registerForPushNotifications();
 
-      if (error) throw error;
-      
-      if (data) {
-        await AsyncStorage.setItem('usuario_id', data.id.toString());
-        setIsRegistered(true);
-        Alert.alert("¡Bienvenido!", `Hola ${nombre}, registro completado.`);
-      }
-    } catch (err: any) {
-      Alert.alert("Error al registrar", err.message);
+    // Insertamos al miembro CON su token en la columna token_notificacion
+    const { data, error } = await supabase
+      .from('miembros')
+      .insert([{ 
+        nombre, 
+        apellido, 
+        token_notificacion: token 
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    if (data) {
+      await AsyncStorage.setItem('usuario_id', data.id.toString());
+      setIsRegistered(true);
+      // Solo mostramos el cartel de bienvenida, NO el del token
+      Alert.alert("¡Bienvenido!", `Hola ${nombre}, ya puedes registrar tu asistencia.`);
     }
-  };
+  } catch (err: any) {
+    Alert.alert("Error", "No se pudo completar el registro.");
+  }
+};
 
   const handleScan = async (data: string) => {
     if (data === 'ASISTENCIA_IGLESIA') {
