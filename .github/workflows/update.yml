@@ -1,0 +1,29 @@
+name: Actualizar App Automática
+on:
+  push:
+    branches:
+      - main  # Esto hace que se active cada vez que subís cambios a GitHub
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⚙️ Configurar Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: 🚀 Configurar Expo y EAS
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Instalar dependencias
+        run: npm install
+
+      - name: 📱 Publicar EAS Update
+        run: eas update --auto --branch main
