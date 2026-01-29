@@ -15,17 +15,13 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: 'npm'
 
-      - name: 🚀 Configurar Expo y EAS
-        uses: expo/expo-github-action@v8
-        with:
-          expo-version: latest
-          eas-cache: true
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: 📦 Instalar dependencias
-        run: npm install
+      - name: 🚀 Instalar EAS CLI y dependencias
+        run: |
+          npm install --global eas-cli
+          npm install
 
       - name: 📱 Publicar EAS Update
-        run: npx eas-cli update --auto --branch main
+        run: eas update --auto --branch main
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
