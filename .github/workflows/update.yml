@@ -16,12 +16,17 @@ jobs:
         with:
           node-version: 18
 
-      - name: 🚀 Instalar EAS CLI y dependencias
+      - name: 🚀 Instalar EAS y Dependencias
+        # Aumentamos memoria para evitar el error de Metro
         run: |
           npm install --global eas-cli
-          npm install
+          npm install --legacy-peer-deps
+        env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
 
-      - name: 📱 Publicar EAS Update
-        run: eas update --auto --branch main
+      - name: 📱 Publicar EAS Update (Solo Android)
+        # Especificamos plataforma para evitar errores de certificados iOS
+        run: eas update --auto --branch main --platform android --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          NODE_OPTIONS: "--max_old_space_size=4096"
