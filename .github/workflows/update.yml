@@ -2,7 +2,7 @@ name: Actualizar App Automática
 on:
   push:
     branches:
-      - main  # Esto hace que se active cada vez que subís cambios a GitHub
+      - main
 
 jobs:
   update:
@@ -15,15 +15,17 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+          cache: 'npm' # Agregamos esto para que sea más estable
 
       - name: 🚀 Configurar Expo y EAS
         uses: expo/expo-github-action@v8
         with:
           expo-version: latest
+          eas-cache: true
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: 📦 Instalar dependencias
-        run: npm install
+        run: npm install # Forzamos el uso de npm puro
 
       - name: 📱 Publicar EAS Update
-        run: eas update --auto --branch main
+        run: npx eas-cli update --auto --branch main
