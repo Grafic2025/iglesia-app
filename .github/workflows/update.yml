@@ -11,22 +11,18 @@ jobs:
       - name: 🏗 Checkout repo
         uses: actions/checkout@v3
 
-      - name: ⚙️ Configurar Node
+      - name: ⚙️ Configurar Node (v20)
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20 # <--- Cambiamos de 18 a 20 para arreglar el toReversed
 
       - name: 🚀 Instalar EAS y Dependencias
-        # Aumentamos memoria para evitar el error de Metro
         run: |
           npm install --global eas-cli
           npm install --legacy-peer-deps
-        env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
 
-      - name: 📱 Publicar EAS Update (Solo Android)
-        # Especificamos plataforma para evitar errores de certificados iOS
-        run: eas update --auto --branch main --platform android --non-interactive
+      - name: 📱 Publicar EAS Update
+        # Usamos CI=1 como sugirió el error y forzamos Node 20
+        run: CI=1 eas update --auto --branch main --platform android
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          NODE_OPTIONS: "--max_old_space_size=4096"
