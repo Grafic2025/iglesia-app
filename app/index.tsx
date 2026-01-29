@@ -305,6 +305,10 @@ export default function App() {
               <ActionCard title="Soy Nuevo" icon="user-plus" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Nuevo.jpg" />
               <ActionCard title="Necesito Oracion" icon="bullhorn" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Oracion.jpg" />
             </View>
+        <View style={styles.row}>
+          <ActionCard title="Sumarme a un Grupo" icon="users" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Grupo.jpg" />
+          <ActionCard title="Reunion En Vivo" icon="video-camera" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Vivo.jpg" />
+        </View>
           </View>
 
           <TouchableOpacity style={styles.assistButton} onPress={async () => {
