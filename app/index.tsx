@@ -25,8 +25,8 @@ const NOTICIAS = [
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false); // Seguro contra duplicados
-  const [memberId, setMemberId] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [memberId, setMemberId] = useState(null);
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
   const [currentScreen, setCurrentScreen] = useState('Inicio'); 
@@ -34,11 +34,10 @@ export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
   
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef(null);
   const indexRef = useRef(0);
   const slideAnim = useRef(new Animated.Value(-width * 0.75)).current;
 
-  // 1. CARGAR SESIÓN PERSISTENTE
   useEffect(() => {
     const loadSession = async () => {
       try {
@@ -66,9 +65,8 @@ export default function App() {
     loadSession();
   }, []);
 
-  // Carrusel automático
   useEffect(() => {
-    let interval: any;
+    let interval;
     if (isLoggedIn && currentScreen === 'Inicio' && !scanning) {
       interval = setInterval(() => {
         indexRef.current = (indexRef.current + 1) % NOTICIAS.length;
@@ -94,10 +92,8 @@ export default function App() {
       let finalId = memberId;
 
       if (memberId) {
-        // ACTUALIZAR EXISTENTE (Modificar datos)
         await supabase.from('miembros').update({ nombre: nombreLimpio, apellido: apellidoLimpio, token_notificacion: token }).eq('id', memberId);
       } else {
-        // NUEVO INGRESO
         const { data: existentes } = await supabase.from('miembros').select('*').eq('nombre', nombreLimpio).eq('apellido', apellidoLimpio);
         if (existentes && existentes.length > 0) {
           finalId = existentes[0].id;
@@ -115,27 +111,25 @@ export default function App() {
         setMemberId(finalId);
         setIsLoggedIn(true);
       }
-    } catch (e: any) {
+    } catch (e) {
       Alert.alert("Error", "No se pudo sincronizar.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBarCodeScanned = async ({ data }: { data: string }) => {
-    if (isProcessing) return; // Evita el doble disparo del sensor
-    
+  const handleBarCodeScanned = async ({ data }) => {
+    if (isProcessing) return;
     setScanning(false);
     if (!memberId || data !== 'ASISTENCIA_IGLESIA') {
       Alert.alert("Error", "Código QR no válido.");
       return;
     }
 
-    setIsProcessing(true); // Bloqueo de seguridad
-
+    setIsProcessing(true);
     try {
       const ahoraLocal = new Date();
-      const opciones: Intl.DateTimeFormatOptions = {
+      const opciones = {
         timeZone: "America/Argentina/Buenos_Aires",
         hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
       };
@@ -156,13 +150,11 @@ export default function App() {
         return;
       }
 
-      // 1. Insertar asistencia
       await supabase.from('asistencias').insert([{ miembro_id: memberId, fecha: fechaHoy, hora_entrada: horaArgString, horario_reunion: bloque }]);
       
-      // 2. Notificación Push de Bienvenida
       const token = await registerForPushNotifications();
       if (token) {
-        fetch('https://iglesia-admin.vercel.app/api/notify', { // Agregado /api/notify
+        fetch('https://iglesia-admin.vercel.app/api/notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
@@ -178,7 +170,7 @@ export default function App() {
     } catch (e) {
       Alert.alert("Error", "No se pudo procesar.");
     } finally {
-      setIsProcessing(false); // Desbloqueo
+      setIsProcessing(false);
     }
   };
 
@@ -206,7 +198,7 @@ export default function App() {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const navigateTo = (screen: string) => {
+  const navigateTo = (screen) => {
     setCurrentScreen(screen);
     if (isMenuOpen) toggleMenu();
   };
@@ -251,7 +243,6 @@ export default function App() {
         <DrawerItem label="Agenda" icon="calendar" active={currentScreen === 'Agenda'} onPress={() => navigateTo('Agenda')} />
         <DrawerItem label="Contacto" icon="phone" active={currentScreen === 'Contacto'} onPress={() => navigateTo('Contacto')} />
         
-        {/* BOTÓN CAMBIADO A MODIFICAR DATOS */}
         <TouchableOpacity style={styles.editBtn} onPress={handleEditProfile}>
           <Text style={{color: '#c5ff00', fontWeight: 'bold'}}>MODIFICAR MIS DATOS</Text>
         </TouchableOpacity>
@@ -305,10 +296,29 @@ export default function App() {
               <ActionCard title="Soy Nuevo" icon="user-plus" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Nuevo.jpg" />
               <ActionCard title="Necesito Oracion" icon="bullhorn" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Oracion.jpg" />
             </View>
-        <View style={styles.row}>
-          <ActionCard title="Sumarme a un Grupo" icon="users" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Grupo.jpg" />
-          <ActionCard title="Reunion En Vivo" icon="video-camera" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Vivo.jpg" />
-        </View>
+            <View style={styles.row}>
+              <ActionCard title="Sumarme a un Grupo" icon="users" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Grupo.jpg" />
+              <ActionCard title="Reunion En Vivo" icon="video-camera" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Vivo.jpg" />
+            </View>
+          </View>
+
+          {/* SECCIÓN DE REDES SOCIALES */}
+          <View style={styles.socialSection}>
+            <Text style={styles.socialTitle}>SEGUINOS EN NUESTRAS REDES</Text>
+            <View style={styles.socialIconsRow}>
+              <TouchableOpacity onPress={() => Linking.openURL('https://instagram.com/tu_iglesia')}>
+                <FontAwesome name="instagram" size={30} color="#E1306C" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => Linking.openURL('https://tiktok.com/@tu_iglesia')}>
+                <MaterialCommunityIcons name="tiktok" size={30} color="#FFFFFF" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => Linking.openURL('https://facebook.com/tu_iglesia')}>
+                <FontAwesome name="facebook" size={30} color="#4267B2" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => Linking.openURL('https://youtube.com/tu_iglesia')}>
+                <FontAwesome name="youtube-play" size={30} color="#FF0000" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <TouchableOpacity style={styles.assistButton} onPress={async () => {
@@ -337,16 +347,16 @@ export default function App() {
   );
 }
 
-const DrawerItem = ({ label, icon, active, onPress }: any) => (
+const DrawerItem = ({ label, icon, active, onPress }) => (
   <TouchableOpacity style={[styles.drawerItem, active && styles.drawerActiveItem]} onPress={onPress}>
     <FontAwesome name={icon} size={20} color={active ? '#c5ff00' : 'white'} />
     <Text style={[styles.drawerItemText, active && {color: '#c5ff00'}]}> {label}</Text>
   </TouchableOpacity>
 );
 
-const ActionCard = ({ title, icon, image, onPress }: any) => {
-  let IconLibrary: any = FontAwesome;
-  let iconName: any = icon;
+const ActionCard = ({ title, icon, image, onPress }) => {
+  let IconLibrary = FontAwesome;
+  let iconName = icon;
   let iconSize = 24;
   if (icon === 'hand-stop-o') { IconLibrary = MaterialCommunityIcons; iconName = 'hand-heart'; iconSize = 28; }
   else if (icon === 'user-plus') { IconLibrary = MaterialCommunityIcons; iconName = 'account-plus'; iconSize = 28; }
@@ -396,6 +406,9 @@ const styles = StyleSheet.create({
   cardImg: { flex: 1 },
   cardOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', borderRadius: 15, padding: 5 },
   cardText: { color: 'white', fontWeight: '900', fontSize: 14, textAlign: 'center' },
+  socialSection: { marginTop: 30, alignItems: 'center', paddingVertical: 10 },
+  socialTitle: { color: '#888', fontSize: 12, fontWeight: 'bold', letterSpacing: 2, marginBottom: 15 },
+  socialIconsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '70%', alignItems: 'center' },
   assistButton: { backgroundColor: '#c5ff00', margin: 20, padding: 20, borderRadius: 25, alignItems: 'center' },
   assistButtonText: { color: '#000', fontWeight: 'bold', fontSize: 18 },
   pageContainer: { flex: 1, padding: 20, backgroundColor: '#000' },
