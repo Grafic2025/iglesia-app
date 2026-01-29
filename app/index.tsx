@@ -185,7 +185,7 @@ export default function App() {
   const handleEditProfile = () => {
     Alert.alert(
       "Modificar Datos",
-      "¿Deseas corregir tu nombre o apellido?",
+      "¿Deseas corregir tu nombre y apellido?",
       [
         { text: "Cancelar", style: "cancel" },
         { 
