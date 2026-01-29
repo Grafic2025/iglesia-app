@@ -1,0 +1,28 @@
+name: Actualizar App Automática
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⚙️ Configurar Node (v20)
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20 # <--- Cambiamos de 18 a 20 para arreglar el toReversed
+
+      - name: 🚀 Instalar EAS y Dependencias
+        run: |
+          npm install --global eas-cli
+          npm install --legacy-peer-deps
+
+      - name: 📱 Publicar EAS Update
+        # Usamos CI=1 como sugirió el error y forzamos Node 20
+        run: CI=1 eas update --auto --branch main --platform android
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
