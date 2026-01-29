@@ -22,7 +22,12 @@
       ]
     },
     "plugins": [
-      "expo-camera"
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permitir que la app use la cámara para escanear asistencias."
+        }
+      ]
     ],
     "runtimeVersion": {
       "policy": "appVersion"
