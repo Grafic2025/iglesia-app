@@ -3,7 +3,7 @@
     "name": "Iglesia del Salvador",
     "slug": "iglesia-app",
     "version": "1.0.1",
-    "scheme": ["iglesia-del-salvador"],
+    "scheme": "iglesia-del-salvador",
     "icon": "./assets/images/Logo.png",
     "splash": {
       "image": "./assets/images/Logo.png",
