@@ -5,7 +5,7 @@ import {
   Linking, Dimensions, Animated, Alert, ActivityIndicator 
 } from 'react-native';
 import { Stack } from 'expo-router';
-import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
+import { FontAwesome, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -38,6 +38,20 @@ export default function App() {
   const indexRef = useRef(0);
   const slideAnim = useRef(new Animated.Value(-width * 0.75)).current;
 
+  // Auto-deslizado de noticias
+  useEffect(() => {
+    if (isLoggedIn && currentScreen === 'Inicio') {
+      const interval = setInterval(() => {
+        indexRef.current = (indexRef.current + 1) % NOTICIAS.length;
+        flatListRef.current?.scrollToIndex({
+          index: indexRef.current,
+          animated: true,
+        });
+      }, 3500);
+      return () => clearInterval(interval);
+    }
+  }, [isLoggedIn, currentScreen]);
+
   useEffect(() => {
     const loadSession = async () => {
       try {
@@ -50,10 +64,6 @@ export default function App() {
           setNombre(savedNombre);
           setApellido(savedApellido);
           setIsLoggedIn(true);
-          const token = await registerForPushNotifications();
-          if (token) {
-            await supabase.from('miembros').update({ token_notificacion: token }).eq('id', savedMemberId);
-          }
         }
       } catch (e) {
         console.error("Error cargando sesión", e);
@@ -64,16 +74,18 @@ export default function App() {
     loadSession();
   }, []);
 
-  useEffect(() => {
-    let interval;
-    if (isLoggedIn && currentScreen === 'Inicio' && !scanning) {
-      interval = setInterval(() => {
-        indexRef.current = (indexRef.current + 1) % NOTICIAS.length;
-        flatListRef.current?.scrollToIndex({ index: indexRef.current, animated: true });
-      }, 4000);
+  const openSocial = async (url, appUrl) => {
+    try {
+      const canOpen = await Linking.canOpenURL(appUrl);
+      if (canOpen) {
+        await Linking.openURL(appUrl);
+      } else {
+        await Linking.openURL(url);
+      }
+    } catch (error) {
+      await Linking.openURL(url);
     }
-    return () => clearInterval(interval);
-  }, [isLoggedIn, currentScreen, scanning]);
+  };
 
   const handleLogin = async () => {
     const nombreLimpio = nombre.trim();
@@ -84,18 +96,15 @@ export default function App() {
     }
     setLoading(true);
     try {
-      let token = null;
-      try { token = await registerForPushNotifications(); } catch (e) {}
       let finalId = memberId;
       if (memberId) {
-        await supabase.from('miembros').update({ nombre: nombreLimpio, apellido: apellidoLimpio, token_notificacion: token }).eq('id', memberId);
+        await supabase.from('miembros').update({ nombre: nombreLimpio, apellido: apellidoLimpio }).eq('id', memberId);
       } else {
         const { data: existentes } = await supabase.from('miembros').select('*').eq('nombre', nombreLimpio).eq('apellido', apellidoLimpio);
         if (existentes && existentes.length > 0) {
           finalId = existentes[0].id;
-          await supabase.from('miembros').update({ token_notificacion: token }).eq('id', finalId);
         } else {
-          const { data: nuevo } = await supabase.from('miembros').insert([{ nombre: nombreLimpio, apellido: apellidoLimpio, token_notificacion: token }]).select();
+          const { data: nuevo } = await supabase.from('miembros').insert([{ nombre: nombreLimpio, apellido: apellidoLimpio }]).select();
           if (nuevo) finalId = nuevo[0].id;
         }
       }
@@ -123,14 +132,16 @@ export default function App() {
     setIsProcessing(true);
     try {
       const ahoraLocal = new Date();
-      const opciones = { timeZone: "America/Argentina/Buenos_Aires", hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+      const opciones = { timeZone: "America/Argentina/Buenos_Aires", hour: '2-digit', minute: '2-digit', hour12: false };
       const horaArgString = ahoraLocal.toLocaleTimeString("es-AR", opciones);
       const [hora] = horaArgString.split(':').map(Number);
       const fechaHoy = ahoraLocal.toLocaleDateString('en-CA', { timeZone: "America/Argentina/Buenos_Aires" });
+      
       let bloque = "Extraoficial";
       if (hora >= 8 && hora < 10) bloque = "09:00";
       else if (hora >= 10 && hora <= 12) bloque = "11:00";
       else if (hora >= 19 && hora < 21) bloque = "20:00";
+
       const { data: existente } = await supabase.from('asistencias').select('id').eq('miembro_id', memberId).eq('fecha', fechaHoy).eq('horario_reunion', bloque);
       if (existente && existente.length > 0) {
         Alert.alert("Bienvenido", `Ya has registrado tu asistencia.`);
@@ -146,6 +157,16 @@ export default function App() {
     }
   };
 
+  const handleEditProfile = () => {
+    Alert.alert("Modificar Datos", "¿Deseas corregir tu nombre y apellido?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Sí, modificar", onPress: () => {
+          setIsLoggedIn(false);
+          if(isMenuOpen) toggleMenu();
+      }}
+    ]);
+  };
+
   const toggleMenu = () => {
     const toValue = isMenuOpen ? -width * 0.75 : 0;
     Animated.timing(slideAnim, { toValue, duration: 300, useNativeDriver: true }).start();
@@ -157,20 +178,14 @@ export default function App() {
     if (isMenuOpen) toggleMenu();
   };
 
-  if (loading) {
-    return (
-      <View style={[styles.loginContainer, { backgroundColor: '#000' }]}>
-        <ActivityIndicator size="large" color="#c5ff00" />
-      </View>
-    );
-  }
+  if (loading) return <View style={styles.loader}><ActivityIndicator size="large" color="#c5ff00" /></View>;
 
   if (!isLoggedIn) {
     return (
       <View style={styles.loginContainer}>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={styles.loginBox}>
-          <Text style={[styles.loginWelcome, { color: '#FFFFFF' }]}>BIENVENIDOS A NUESTRA COMUNIDAD</Text>
+          <Text style={styles.loginWelcome}>BIENVENIDOS A NUESTRA COMUNIDAD</Text>
           <Text style={styles.loginTitle}>IGLESIA DEL SALVADOR</Text>
           <View style={styles.underlineTitle} />
           <TextInput style={styles.input} placeholder="Nombre" placeholderTextColor="#888" value={nombre} onChangeText={setNombre} />
@@ -196,26 +211,26 @@ export default function App() {
         <DrawerItem label="Nosotros" icon="info-circle" active={currentScreen === 'Nosotros'} onPress={() => navigateTo('Nosotros')} />
         <DrawerItem label="Agenda" icon="calendar" active={currentScreen === 'Agenda'} onPress={() => navigateTo('Agenda')} />
         <DrawerItem label="Contacto" icon="phone" active={currentScreen === 'Contacto'} onPress={() => navigateTo('Contacto')} />
+        <TouchableOpacity style={styles.editBtn} onPress={handleEditProfile}>
+          <Text style={{color: '#c5ff00', fontWeight: 'bold'}}>MODIFICAR MIS DATOS</Text>
+        </TouchableOpacity>
       </Animated.View>
 
       <View style={styles.topNav}>
         <TouchableOpacity onPress={toggleMenu}><FontAwesome name="navicon" size={24} color="white" /></TouchableOpacity>
         <View style={{ alignItems: 'center' }}>
           <Text style={styles.navTitle}>IGLESIA DEL SALVADOR</Text>
-          <View style={styles.underlineTitle} />
+          <View style={styles.underlineTitleMain} />
         </View>
         <View style={styles.userCircle}><FontAwesome name="user" size={16} color="black" /></View>
       </View>
 
       {currentScreen === 'Inicio' ? (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 60 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
           <View style={styles.carruselSection}>
             <FlatList
-              ref={flatListRef}
-              data={NOTICIAS}
-              horizontal
-              pagingEnabled
-              keyExtractor={(item) => item.id}
+              ref={flatListRef} data={NOTICIAS} horizontal pagingEnabled keyExtractor={(item) => item.id}
+              showsHorizontalScrollIndicator={false}
               renderItem={({ item }) => (
                 <View style={styles.slide}>
                   <ImageBackground source={{ uri: item.image }} style={styles.slideImage} imageStyle={{ borderRadius: 25 }}>
@@ -238,17 +253,19 @@ export default function App() {
             </View>
             <View style={styles.row}>
               <ActionCard title="Quiero Ayudar" icon="heart" image="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400" onPress={() => Linking.openURL('https://iglesiadelsalvador.com.ar/donar')} />
-              <ActionCard title="Necesito Ayuda" icon="hand-stop-o" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Ayuda.jpg" />
+              <ActionCard title="Necesito Ayuda" icon="hand-heart" isMCI image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Ayuda.jpg" />
             </View>
-          </View>
-
-          <View style={styles.socialSection}>
-            <Text style={styles.socialTitle}>SEGUINOS EN NUESTRAS REDES</Text>
-            <View style={styles.socialIconsRow}>
-              <TouchableOpacity onPress={() => Linking.openURL('https://instagram.com/tu_iglesia')}><FontAwesome name="instagram" size={30} color="#E1306C" /></TouchableOpacity>
-              <TouchableOpacity onPress={() => Linking.openURL('https://tiktok.com/@tu_iglesia')}><MaterialCommunityIcons name="tiktok" size={30} color="#FFFFFF" /></TouchableOpacity>
-              <TouchableOpacity onPress={() => Linking.openURL('https://facebook.com/tu_iglesia')}><FontAwesome name="facebook" size={30} color="#4267B2" /></TouchableOpacity>
-              <TouchableOpacity onPress={() => Linking.openURL('https://youtube.com/tu_iglesia')}><FontAwesome name="youtube-play" size={30} color="#FF0000" /></TouchableOpacity>
+            <View style={styles.row}>
+              <ActionCard title="Quiero Bautizarme" icon="tint" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Bautismos.jpg" />
+              <ActionCard title="Quiero Capacitarme" icon="graduation-cap" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Capacitarme.jpg" />
+            </View>
+            <View style={styles.row}>
+              <ActionCard title="Soy Nuevo" icon="account-plus" isMCI image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Nuevo.jpg" />
+              <ActionCard title="Necesito Oración" icon="hands-pray" isMCI image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Oracion.jpg" />
+            </View>
+            <View style={styles.row}>
+              <ActionCard title="Sumarme a un Grupo" icon="users" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Grupo.jpg" />
+              <ActionCard title="Reunion En Vivo" icon="video-camera" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Vivo.jpg" />
             </View>
           </View>
 
@@ -258,6 +275,27 @@ export default function App() {
           }}>
             <Text style={styles.assistButtonText}>📸 REGISTRAR ASISTENCIA</Text>
           </TouchableOpacity>
+
+          <View style={styles.socialSection}>
+            <Text style={styles.socialTitle}>SEGUINOS EN NUESTRAS REDES</Text>
+            <View style={styles.socialIconsRow}>
+              <TouchableOpacity onPress={() => Linking.openURL('https://instagram.com/iglesiadelsalvador')}>
+                <FontAwesome name="instagram" size={28} color="#E1306C" />
+              </TouchableOpacity>
+              
+              <TouchableOpacity onPress={() => Linking.openURL('https://www.tiktok.com/@iglesiadelsalvador')}>
+                <FontAwesome5 name="tiktok" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => openSocial('https://facebook.com/iglesiadelsalvador', 'fb://facewebmodal/f?href=https://facebook.com/iglesiadelsalvador')}>
+                <FontAwesome name="facebook" size={28} color="#4267B2" />
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => Linking.openURL('https://youtube.com/@iglesiadelsalvador')}>
+                <FontAwesome name="youtube-play" size={28} color="#FF0000" />
+              </TouchableOpacity>
+            </View>
+          </View>
         </ScrollView>
       ) : (
         <View style={styles.pageContainer}>
@@ -285,30 +323,26 @@ const DrawerItem = ({ label, icon, active, onPress }) => (
   </TouchableOpacity>
 );
 
-const ActionCard = ({ title, icon, image, onPress }) => {
-  let IconLibrary = FontAwesome;
-  let iconName = icon;
-  let iconSize = 24;
-  if (icon === 'hand-stop-o') { IconLibrary = MaterialCommunityIcons; iconName = 'hand-heart'; iconSize = 28; }
-  return (
-    <TouchableOpacity style={styles.cardContainer} onPress={onPress}>
-      <ImageBackground source={{ uri: image }} style={styles.cardImg} imageStyle={{ borderRadius: 15 }}>
-        <View style={[styles.cardOverlay, { backgroundColor: 'rgba(0,0,0,0.55)' }]}>
-          <IconLibrary name={iconName} size={iconSize} color="#c5ff00" style={{ marginBottom: 6 }} />
-          <Text style={styles.cardText}>{title}</Text>
-        </View>
-      </ImageBackground>
-    </TouchableOpacity>
-  );
-};
+const ActionCard = ({ title, icon, image, onPress, isMCI }) => (
+  <TouchableOpacity style={styles.cardContainer} onPress={onPress}>
+    <ImageBackground source={{ uri: image }} style={styles.cardImg} imageStyle={{ borderRadius: 15 }}>
+      <View style={styles.cardOverlay}>
+        {isMCI ? <MaterialCommunityIcons name={icon} size={26} color="#c5ff00" /> : <FontAwesome name={icon} size={24} color="#c5ff00" />}
+        <Text style={styles.cardText}>{title}</Text>
+      </View>
+    </ImageBackground>
+  </TouchableOpacity>
+);
 
 const styles = StyleSheet.create({
   mainContainer: { flex: 1, backgroundColor: '#000' },
+  loader: { flex: 1, backgroundColor: '#000', justifyContent: 'center' },
   loginContainer: { flex: 1, backgroundColor: '#121212', justifyContent: 'center', alignItems: 'center' },
   loginBox: { backgroundColor: '#1e1e1e', padding: 30, borderRadius: 30, width: '90%', alignItems: 'center' },
-  loginWelcome: { fontSize: 11, marginBottom: 5, fontWeight: '700', letterSpacing: 1.5 },
+  loginWelcome: { fontSize: 11, marginBottom: 5, fontWeight: '700', color: '#fff', letterSpacing: 1.5 },
   loginTitle: { color: '#c5ff00', fontSize: 20, fontWeight: 'bold' },
-  underlineTitle: { height: 3, backgroundColor: '#c5ff00', width: '60%', marginTop: 4, borderRadius: 2 },
+  underlineTitle: { height: 3, backgroundColor: '#c5ff00', width: '65%', marginTop: 4, borderRadius: 2 },
+  underlineTitleMain: { height: 3, backgroundColor: '#c5ff00', width: '90%', marginTop: 4, borderRadius: 2 },
   input: { backgroundColor: '#2a2a2a', width: '100%', padding: 15, borderRadius: 12, color: 'white', marginTop: 15 },
   loginButton: { backgroundColor: '#c5ff00', width: '100%', padding: 15, borderRadius: 12, alignItems: 'center', marginTop: 20 },
   loginButtonText: { fontWeight: 'bold', color: '#000' },
@@ -321,24 +355,35 @@ const styles = StyleSheet.create({
   drawerItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 15, paddingLeft: 10 },
   drawerActiveItem: { borderLeftWidth: 4, borderLeftColor: '#c5ff00' },
   drawerItemText: { color: 'white', fontSize: 18, marginLeft: 15 },
+  editBtn: { marginTop: 40, padding: 15, backgroundColor: '#333', borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#c5ff00' },
   carruselSection: { height: 230 },
   slide: { width: width, padding: 15 },
   slideImage: { width: '100%', height: 200, justifyContent: 'flex-end', overflow: 'hidden' },
   slideOverlay: { backgroundColor: 'rgba(0,0,0,0.6)', padding: 15 },
   slideTitle: { color: '#FFFFFF', fontSize: 22, fontWeight: 'bold' },
-  whatsappButton: { flexDirection: 'row', backgroundColor: '#005a42', margin: 15, padding: 15, borderRadius: 15, justifyContent: 'center', alignItems: 'center' },
+  whatsappButton: { flexDirection: 'row', backgroundColor: '#005a42', marginHorizontal: 15, marginBottom: 15, padding: 15, borderRadius: 15, justifyContent: 'center', alignItems: 'center' },
   whatsappText: { color: 'white', fontWeight: 'bold' },
   grid: { paddingHorizontal: 10 },
   row: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 12 },
   cardContainer: { width: width * 0.45, height: 110 },
   cardImg: { flex: 1 },
-  cardOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', borderRadius: 15, padding: 5 },
-  cardText: { color: 'white', fontWeight: '900', fontSize: 14, textAlign: 'center' },
-  socialSection: { marginTop: 30, alignItems: 'center', paddingVertical: 10 },
-  socialTitle: { color: '#888', fontSize: 12, fontWeight: 'bold', letterSpacing: 2, marginBottom: 15 },
-  socialIconsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '70%', alignItems: 'center' },
+  // Capa gris muy tenue (0.35) para máxima iluminación
+  cardOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', borderRadius: 15, backgroundColor: 'rgba(0,0,0,0.35)' },
+  cardText: { 
+    color: 'white', 
+    fontWeight: '900', 
+    fontSize: 13, 
+    textAlign: 'center', 
+    marginTop: 5,
+    textShadowColor: 'rgba(0, 0, 0, 0.8)', 
+    textShadowOffset: {width: 1, height: 1}, 
+    textShadowRadius: 5 
+  },
   assistButton: { backgroundColor: '#c5ff00', margin: 20, padding: 20, borderRadius: 25, alignItems: 'center' },
   assistButtonText: { color: '#000', fontWeight: 'bold', fontSize: 18 },
+  socialSection: { alignItems: 'center', paddingVertical: 10, marginBottom: 20 },
+  socialTitle: { color: '#FFFFFF', fontSize: 12, fontWeight: 'bold', letterSpacing: 2, marginBottom: 10 },
+  socialIconsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '60%' },
   pageContainer: { flex: 1, padding: 20, backgroundColor: '#000' },
   sectionTitle: { color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' },
   cameraContainer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'black', zIndex: 2000 },
