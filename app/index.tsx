@@ -87,16 +87,20 @@ export default function App() {
     }
   };
 
-  const handleLogin = async () => {
+ const handleLogin = async () => {
     const nombreLimpio = nombre.trim();
     const apellidoLimpio = apellido.trim();
+    
     if (!nombreLimpio || !apellidoLimpio) {
       Alert.alert("Error", "Por favor completa tu nombre y apellido");
       return;
     }
+
     setLoading(true);
     try {
       let finalId = memberId;
+
+      // Lógica de Supabase para Miembros
       if (memberId) {
         await supabase.from('miembros').update({ nombre: nombreLimpio, apellido: apellidoLimpio }).eq('id', memberId);
       } else {
@@ -104,23 +108,33 @@ export default function App() {
         if (existentes && existentes.length > 0) {
           finalId = existentes[0].id;
         } else {
-          const { data: nuevo } = await supabase.from('miembros').insert([{ nombre: nombreLimpio, apellido: apellidoLimpio }]).select();
+          const { data: nuevo } = await supabase.from('miembros').insert([{ nombre: nombreLimpio, apellido: apellidoLimpio }]) .select();
           if (nuevo) finalId = nuevo[0].id;
         }
       }
+
       if (finalId) {
-        await AsyncStorage.setItem('memberId', finalId);
+        await AsyncStorage.setItem('memberId', finalId.toString());
         await AsyncStorage.setItem('nombre', nombreLimpio);
         await AsyncStorage.setItem('apellido', apellidoLimpio);
         setMemberId(finalId);
         
-        // --- CAMBIO AQUÍ: Registro del token al iniciar sesión ---
-        await registerForPushNotifications(finalId);
+        // --- DIAGNÓSTICO DE NOTIFICACIONES ---
+        console.log("Intentando registrar token para ID:", finalId);
+        const token = await registerForPushNotifications(finalId);
+        
+        if (!token) {
+          // Si devuelve null, es que algo falló en los permisos o es un emulador
+          console.log("El token devolvió NULL");
+        } else {
+          console.log("Token obtenido correctamente:", token);
+        }
         
         setIsLoggedIn(true);
       }
     } catch (e) {
-      Alert.alert("Error", "No se pudo sincronizar.");
+      console.error(e);
+      Alert.alert("Error", "No se pudo sincronizar: " + e.message);
     } finally {
       setLoading(false);
     }
