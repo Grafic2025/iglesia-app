@@ -2,8 +2,11 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { supabase } from './supabase';
 
-export async function registerForPushNotifications() {
-  if (!Device.isDevice) return null;
+export async function registerForPushNotifications(memberId) {
+  if (!Device.isDevice) {
+    console.log('Debe ser un dispositivo físico para recibir notificaciones');
+    return null;
+  }
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
@@ -13,7 +16,10 @@ export async function registerForPushNotifications() {
     finalStatus = status;
   }
 
-  if (finalStatus !== 'granted') return null;
+  if (finalStatus !== 'granted') {
+    console.log('Permiso de notificaciones rechazado');
+    return null;
+  }
 
   try {
     const tokenData = await Notifications.getExpoPushTokenAsync({
@@ -22,10 +28,24 @@ export async function registerForPushNotifications() {
     
     const token = tokenData.data; 
 
-    // Guardamos silenciosamente en la tabla auxiliar por seguridad
+    // 1. Guardamos en la tabla auxiliar de tokens (opcional, como respaldo)
     await supabase.from('push_tokens').upsert({ token }, { onConflict: 'token' });
 
-    return token; // Retorna el token para que index.tsx lo use
+    // 2. VINCULAR CON EL MIEMBRO (Esto repara el NULL que tenés en Supabase)
+    if (memberId) {
+      const { error } = await supabase
+        .from('miembros')
+        .update({ token_notificacion: token })
+        .eq('id', memberId);
+
+      if (error) {
+        console.error('Error al vincular el token con el miembro:', error.message);
+      } else {
+        console.log('Token vinculado exitosamente al miembro:', memberId);
+      }
+    }
+
+    return token; 
   } catch (e) {
     console.error('Error al obtener token:', e);
     return null;

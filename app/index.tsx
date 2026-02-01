@@ -113,6 +113,10 @@ export default function App() {
         await AsyncStorage.setItem('nombre', nombreLimpio);
         await AsyncStorage.setItem('apellido', apellidoLimpio);
         setMemberId(finalId);
+        
+        // --- CAMBIO AQUÍ: Registro del token al iniciar sesión ---
+        await registerForPushNotifications(finalId);
+        
         setIsLoggedIn(true);
       }
     } catch (e) {
@@ -367,7 +371,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 12 },
   cardContainer: { width: width * 0.45, height: 110 },
   cardImg: { flex: 1 },
-  // Capa gris muy tenue (0.35) para máxima iluminación
   cardOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', borderRadius: 15, backgroundColor: 'rgba(0,0,0,0.35)' },
   cardText: { 
     color: 'white', 
