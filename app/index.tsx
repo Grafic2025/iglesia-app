@@ -16,7 +16,7 @@ import { registerForPushNotifications } from '../lib/registerPushToken';
 const { width, height } = Dimensions.get('window');
 
 const NOTICIAS = [
-  { id: '1', title: 'Noche de Adoracion', image: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Adoracion.jpg?v=1' },
+  { id: '1', title: 'Noche', image: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Adoracion.jpg?v=1' },
   { id: '2', title: 'Reunión General', image: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Reunion.jpg' },
   { id: '3', title: 'Quiero Capacitarme', image: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Capacitarme.jpg' },
   { id: '4', title: 'Sumarme a un Grupo', image: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Grupos.jpg' },
