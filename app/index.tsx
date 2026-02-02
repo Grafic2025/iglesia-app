@@ -16,7 +16,7 @@ import { registerForPushNotifications } from '../lib/registerPushToken';
 const { width, height } = Dimensions.get('window');
 
 const NOTICIAS = [
-  { id: '1', title: 'Noche de Heaven', image: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Adoracion.jpg?v=1' },
+  { id: '1', title: 'Noche de Adoracion', image: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Adoracion.jpg?v=1' },
   { id: '2', title: 'Reunión General', image: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Reunion.jpg' },
   { id: '3', title: 'Quiero Capacitarme', image: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Capacitarme.jpg' },
   { id: '4', title: 'Sumarme a un Grupo', image: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Grupos.jpg' },
@@ -34,23 +34,32 @@ export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
   
+  const [celular, setCelular] = useState('');
+  const [mensaje, setMensaje] = useState('');
+  const [edad, setEdad] = useState('');
+  const [perteneceGrupo, setPerteneceGrupo] = useState('');
+  const [cursoSeleccionado, setCursoSeleccionado] = useState('Fundamentos cristianos');
+  const [listaPedidosOracion, setListaPedidosOracion] = useState([]);
+
+  const opcionesCursos = ["Fundamentos cristianos", "Instituto Bíblico", "Escuela de Música", "Escuela de Adoración", "Liderazgo"];
+  
   const flatListRef = useRef(null);
   const indexRef = useRef(0);
   const slideAnim = useRef(new Animated.Value(-width * 0.75)).current;
 
-  // Auto-deslizado de noticias
   useEffect(() => {
     if (isLoggedIn && currentScreen === 'Inicio') {
       const interval = setInterval(() => {
         indexRef.current = (indexRef.current + 1) % NOTICIAS.length;
-        flatListRef.current?.scrollToIndex({
-          index: indexRef.current,
-          animated: true,
-        });
+        flatListRef.current?.scrollToIndex({ index: indexRef.current, animated: true });
       }, 3500);
       return () => clearInterval(interval);
     }
   }, [isLoggedIn, currentScreen]);
+
+  useEffect(() => {
+    if (currentScreen === 'Necesito Oración') cargarPedidos();
+  }, [currentScreen]);
 
   useEffect(() => {
     const loadSession = async () => {
@@ -64,6 +73,8 @@ export default function App() {
           setNombre(savedNombre);
           setApellido(savedApellido);
           setIsLoggedIn(true);
+          // ACTIVACIÓN DE NOTIFICACIONES
+          registerForPushNotifications(savedMemberId);
         }
       } catch (e) {
         console.error("Error cargando sesión", e);
@@ -74,67 +85,72 @@ export default function App() {
     loadSession();
   }, []);
 
+  const enviarYBorrar = async (tabla, datos, mensajeExito) => {
+    setIsProcessing(true);
+    try {
+      const { data, error } = await supabase.from(tabla).insert([datos]).select();
+      if (error) throw error;
+      if (data) await supabase.from(tabla).delete().eq('id', data[0].id);
+      Alert.alert("Enviado", mensajeExito, [{ text: "OK", onPress: () => setCurrentScreen('Inicio') }]);
+      setCelular(''); setMensaje(''); setEdad(''); setPerteneceGrupo('');
+    } catch (e) {
+      Alert.alert("Error", "No se pudo enviar la solicitud.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const cargarPedidos = async () => {
+    const { data } = await supabase.from('pedidos_oracion').select('*');
+    if (data) setListaPedidosOracion(data);
+  };
+
+  const avisarQueOro = async (pedido) => {
+    await supabase.from('pedidos_oracion').delete().eq('id', pedido.id);
+    Alert.alert("Amén", `Le avisamos a ${pedido.nombre_solicitante} que estás orando.`);
+    cargarPedidos();
+  };
+
   const openSocial = async (url, appUrl) => {
     try {
       const canOpen = await Linking.canOpenURL(appUrl);
-      if (canOpen) {
-        await Linking.openURL(appUrl);
-      } else {
-        await Linking.openURL(url);
-      }
+      if (canOpen) await Linking.openURL(appUrl);
+      else await Linking.openURL(url);
     } catch (error) {
       await Linking.openURL(url);
     }
   };
 
- const handleLogin = async () => {
+  const handleLogin = async () => {
     const nombreLimpio = nombre.trim();
     const apellidoLimpio = apellido.trim();
-    
     if (!nombreLimpio || !apellidoLimpio) {
-      Alert.alert("Error", "Por favor completa tu nombre y apellido");
+      Alert.alert("Error", "Completa tus datos");
       return;
     }
-
     setLoading(true);
     try {
       let finalId = memberId;
-
-      // Lógica de Supabase para Miembros
       if (memberId) {
         await supabase.from('miembros').update({ nombre: nombreLimpio, apellido: apellidoLimpio }).eq('id', memberId);
       } else {
         const { data: existentes } = await supabase.from('miembros').select('*').eq('nombre', nombreLimpio).eq('apellido', apellidoLimpio);
-        if (existentes && existentes.length > 0) {
-          finalId = existentes[0].id;
-        } else {
-          const { data: nuevo } = await supabase.from('miembros').insert([{ nombre: nombreLimpio, apellido: apellidoLimpio }]) .select();
+        if (existentes && existentes.length > 0) finalId = existentes[0].id;
+        else {
+          const { data: nuevo } = await supabase.from('miembros').insert([{ nombre: nombreLimpio, apellido: apellidoLimpio }]).select();
           if (nuevo) finalId = nuevo[0].id;
         }
       }
-
       if (finalId) {
         await AsyncStorage.setItem('memberId', finalId.toString());
         await AsyncStorage.setItem('nombre', nombreLimpio);
         await AsyncStorage.setItem('apellido', apellidoLimpio);
         setMemberId(finalId);
-        
-        // --- DIAGNÓSTICO DE NOTIFICACIONES ---
-        console.log("Intentando registrar token para ID:", finalId);
-        const token = await registerForPushNotifications(finalId);
-        
-        if (!token) {
-          // Si devuelve null, es que algo falló en los permisos o es un emulador
-          console.log("El token devolvió NULL");
-        } else {
-          console.log("Token obtenido correctamente:", token);
-        }
-        
         setIsLoggedIn(true);
+        registerForPushNotifications(finalId);
       }
     } catch (e) {
-      console.error(e);
-      Alert.alert("Error", "No se pudo sincronizar: " + e.message);
+      Alert.alert("Error", "No se pudo sincronizar.");
     } finally {
       setLoading(false);
     }
@@ -144,45 +160,34 @@ export default function App() {
     if (isProcessing) return;
     setScanning(false);
     if (!memberId || data !== 'ASISTENCIA_IGLESIA') {
-      Alert.alert("Error", "Código QR no válido.");
+      Alert.alert("Error", "QR no válido.");
       return;
     }
     setIsProcessing(true);
     try {
-      const ahoraLocal = new Date();
+      const ahora = new Date();
       const opciones = { timeZone: "America/Argentina/Buenos_Aires", hour: '2-digit', minute: '2-digit', hour12: false };
-      const horaArgString = ahoraLocal.toLocaleTimeString("es-AR", opciones);
-      const [hora] = horaArgString.split(':').map(Number);
-      const fechaHoy = ahoraLocal.toLocaleDateString('en-CA', { timeZone: "America/Argentina/Buenos_Aires" });
+      const horaArg = ahora.toLocaleTimeString("es-AR", opciones);
+      const [h] = horaArg.split(':').map(Number);
+      const fecha = ahora.toLocaleDateString('en-CA', { timeZone: "America/Argentina/Buenos_Aires" });
       
       let bloque = "Extraoficial";
-      if (hora >= 8 && hora < 10) bloque = "09:00";
-      else if (hora >= 10 && hora <= 12) bloque = "11:00";
-      else if (hora >= 19 && hora < 21) bloque = "20:00";
+      if (h >= 8 && h < 10) bloque = "09:00";
+      else if (h >= 10 && h <= 12) bloque = "11:00";
+      else if (h >= 19 && h < 21) bloque = "20:00";
 
-      const { data: existente } = await supabase.from('asistencias').select('id').eq('miembro_id', memberId).eq('fecha', fechaHoy).eq('horario_reunion', bloque);
-      if (existente && existente.length > 0) {
-        Alert.alert("Bienvenido", `Ya has registrado tu asistencia.`);
-        setIsProcessing(false);
+      const { data: ex } = await supabase.from('asistencias').select('id').eq('miembro_id', memberId).eq('fecha', fecha).eq('horario_reunion', bloque);
+      if (ex && ex.length > 0) {
+        Alert.alert("Aviso", "Asistencia ya registrada.");
         return;
       }
-      await supabase.from('asistencias').insert([{ miembro_id: memberId, fecha: fechaHoy, hora_entrada: horaArgString, horario_reunion: bloque }]);
-      Alert.alert("¡Bienvenido!", `Asistencia registrada: ${bloque}`);
+      await supabase.from('asistencias').insert([{ miembro_id: memberId, fecha, hora_entrada: horaArg, horario_reunion: bloque }]);
+      Alert.alert("Éxito", `Bienvenido a la reunión de las ${bloque}`);
     } catch (e) {
-      Alert.alert("Error", "No se pudo procesar.");
+      Alert.alert("Error", "Error al procesar.");
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const handleEditProfile = () => {
-    Alert.alert("Modificar Datos", "¿Deseas corregir tu nombre y apellido?", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Sí, modificar", onPress: () => {
-          setIsLoggedIn(false);
-          if(isMenuOpen) toggleMenu();
-      }}
-    ]);
   };
 
   const toggleMenu = () => {
@@ -229,7 +234,7 @@ export default function App() {
         <DrawerItem label="Nosotros" icon="info-circle" active={currentScreen === 'Nosotros'} onPress={() => navigateTo('Nosotros')} />
         <DrawerItem label="Agenda" icon="calendar" active={currentScreen === 'Agenda'} onPress={() => navigateTo('Agenda')} />
         <DrawerItem label="Contacto" icon="phone" active={currentScreen === 'Contacto'} onPress={() => navigateTo('Contacto')} />
-        <TouchableOpacity style={styles.editBtn} onPress={handleEditProfile}>
+        <TouchableOpacity style={styles.editBtn} onPress={() => { setIsLoggedIn(false); if(isMenuOpen) toggleMenu(); }}>
           <Text style={{color: '#c5ff00', fontWeight: 'bold'}}>MODIFICAR MIS DATOS</Text>
         </TouchableOpacity>
       </Animated.View>
@@ -270,20 +275,20 @@ export default function App() {
               <ActionCard title="Biblia" icon="book" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Biblia.jpg" onPress={() => Linking.openURL('https://www.bible.com/es')} />
             </View>
             <View style={styles.row}>
-              <ActionCard title="Quiero Ayudar" icon="heart" image="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400" onPress={() => Linking.openURL('https://iglesiadelsalvador.com.ar/donar')} />
-              <ActionCard title="Necesito Ayuda" icon="hand-heart" isMCI image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Ayuda.jpg" />
+              <ActionCard title="Quiero Ayudar" icon="heart" image="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400" onPress={() => navigateTo('Quiero Ayudar')} />
+              <ActionCard title="Necesito Ayuda" icon="hand-heart" isMCI image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Ayuda.jpg" onPress={() => navigateTo('Necesito Ayuda')} />
             </View>
             <View style={styles.row}>
-              <ActionCard title="Quiero Bautizarme" icon="tint" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Bautismos.jpg" />
-              <ActionCard title="Quiero Capacitarme" icon="graduation-cap" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Capacitarme.jpg" />
+              <ActionCard title="Quiero Bautizarme" icon="tint" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Bautismos.jpg" onPress={() => navigateTo('Quiero Bautizarme')} />
+              <ActionCard title="Quiero Capacitarme" icon="graduation-cap" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Capacitarme.jpg" onPress={() => navigateTo('Quiero Capacitarme')} />
             </View>
             <View style={styles.row}>
-              <ActionCard title="Soy Nuevo" icon="account-plus" isMCI image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Nuevo.jpg" />
-              <ActionCard title="Necesito Oración" icon="hands-pray" isMCI image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Oracion.jpg" />
+              <ActionCard title="Soy Nuevo" icon="account-plus" isMCI image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Nuevo.jpg" onPress={() => navigateTo('Soy Nuevo')} />
+              <ActionCard title="Necesito Oración" icon="hands-pray" isMCI image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Oracion.jpg" onPress={() => navigateTo('Necesito Oración')} />
             </View>
             <View style={styles.row}>
-              <ActionCard title="Sumarme a un Grupo" icon="users" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Grupo.jpg" />
-              <ActionCard title="Reunion En Vivo" icon="video-camera" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Vivo.jpg" />
+              <ActionCard title="Sumamarme a un Grupo" icon="users" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Grupo.jpg" onPress={() => Linking.openURL('https://iglesiadelsalvador.com.ar/grupos')} />
+              <ActionCard title="Reunion En Vivo" icon="video-camera" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Vivo.jpg" onPress={() => Linking.openURL('https://youtube.com/@iglesiadelsalvador/live')} />
             </View>
           </View>
 
@@ -297,31 +302,114 @@ export default function App() {
           <View style={styles.socialSection}>
             <Text style={styles.socialTitle}>SEGUINOS EN NUESTRAS REDES</Text>
             <View style={styles.socialIconsRow}>
-              <TouchableOpacity onPress={() => Linking.openURL('https://instagram.com/iglesiadelsalvador')}>
-                <FontAwesome name="instagram" size={28} color="#E1306C" />
-              </TouchableOpacity>
-              
-              <TouchableOpacity onPress={() => Linking.openURL('https://www.tiktok.com/@iglesiadelsalvador')}>
-                <FontAwesome5 name="tiktok" size={24} color="#FFFFFF" />
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => openSocial('https://facebook.com/iglesiadelsalvador', 'fb://facewebmodal/f?href=https://facebook.com/iglesiadelsalvador')}>
-                <FontAwesome name="facebook" size={28} color="#4267B2" />
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => Linking.openURL('https://youtube.com/@iglesiadelsalvador')}>
-                <FontAwesome name="youtube-play" size={28} color="#FF0000" />
-              </TouchableOpacity>
+              <TouchableOpacity onPress={() => Linking.openURL('https://instagram.com/iglesiadelsalvador')}><FontAwesome name="instagram" size={28} color="#E1306C" /></TouchableOpacity>
+              <TouchableOpacity onPress={() => Linking.openURL('https://www.tiktok.com/@iglesiadelsalvador')}><FontAwesome5 name="tiktok" size={24} color="#FFFFFF" /></TouchableOpacity>
+              <TouchableOpacity onPress={() => openSocial('https://facebook.com/iglesiadelsalvador', 'fb://facewebmodal/f?href=https://facebook.com/iglesiadelsalvador')}><FontAwesome name="facebook" size={28} color="#4267B2" /></TouchableOpacity>
+              <TouchableOpacity onPress={() => Linking.openURL('https://youtube.com/@iglesiadelsalvador')}><FontAwesome name="youtube-play" size={28} color="#FF0000" /></TouchableOpacity>
             </View>
           </View>
         </ScrollView>
       ) : (
-        <View style={styles.pageContainer}>
-          <TouchableOpacity onPress={() => setCurrentScreen('Inicio')} style={{marginBottom: 20}}>
-            <Text style={{color: '#FFFFFF'}}><FontAwesome name="arrow-left" /> Volver</Text>
+        <ScrollView style={styles.pageContainer}>
+          <TouchableOpacity onPress={() => setCurrentScreen('Inicio')} style={{flexDirection:'row', alignItems:'center', marginBottom: 20}}>
+            <FontAwesome name="arrow-left" color="#c5ff00" size={18} /><Text style={styles.backTxt}> Volver</Text>
           </TouchableOpacity>
-          <Text style={[styles.sectionTitle, {color: '#FFFFFF'}]}>{currentScreen}</Text>
-        </View>
+          
+          {currentScreen === 'Quiero Ayudar' && (
+            <View>
+              <Text style={styles.sectionTitle}>Donaciones</Text>
+              <TouchableOpacity style={styles.mpBtn} onPress={() => Linking.openURL('https://link.mercadopago.com.ar/iglesiadelsalvador')}>
+                <Text style={{color:'#fff', fontWeight:'bold'}}>MERCADO PAGO ONLINE</Text>
+              </TouchableOpacity>
+              <View style={styles.bankBox}>
+                <Text style={{color:'#c5ff00', fontWeight:'bold'}}>CBU PESOS: 0170008420000001007530</Text>
+                <Text style={{color:'#fff', fontSize:12, marginTop:5}}>ALIAS: IDS.BBVA.CCPESOS | CUIT: 30-53174084-6</Text>
+              </View>
+            </View>
+          )}
+
+          {currentScreen === 'Necesito Ayuda' && (
+            <View>
+              <Text style={styles.sectionTitle}>Escribinos</Text>
+              <TextInput style={styles.inputForm} placeholder="Tu número de Celular" placeholderTextColor="#888" onChangeText={setCelular} keyboardType="phone-pad" />
+              <TextInput style={[styles.inputForm, {height:100}]} placeholder="¿Cómo podemos ayudarte?" placeholderTextColor="#888" multiline onChangeText={setMensaje} />
+              <TouchableOpacity style={styles.submitBtn} onPress={() => enviarYBorrar('consultas_ayuda', {nombre, celular, mensaje}, "Recibimos tu mensaje.")}>
+                <Text style={styles.submitBtnTxt}>ENVIAR</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {currentScreen === 'Quiero Bautizarme' && (
+            <View>
+              <Text style={styles.sectionTitle}>Bautismos</Text>
+              <TextInput style={styles.inputForm} placeholder="¿Qué edad tienes?" placeholderTextColor="#888" onChangeText={setEdad} keyboardType="numeric" />
+              <TextInput style={styles.inputForm} placeholder="¿Perteneces a un grupo? (Si/No)" placeholderTextColor="#888" onChangeText={setPerteneceGrupo} />
+              <TextInput style={styles.inputForm} placeholder="Celular" placeholderTextColor="#888" onChangeText={setCelular} keyboardType="phone-pad" />
+              <TouchableOpacity style={styles.submitBtn} onPress={() => enviarYBorrar('solicitudes_bautismo', {nombre_completo: `${nombre} ${apellido}`, edad, pertenece_grupo: perteneceGrupo, celular}, "Solicitud enviada.")}>
+                <Text style={styles.submitBtnTxt}>SOLICITAR MI BAUTISMO</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {currentScreen === 'Quiero Capacitarme' && (
+            <View>
+              <Text style={styles.sectionTitle}>Cursos IDS</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginBottom:15}}>
+                {opcionesCursos.map(c => (
+                  <TouchableOpacity key={c} style={[styles.chip, cursoSeleccionado === c && {backgroundColor:'#c5ff00'}]} onPress={() => setCursoSeleccionado(c)}>
+                    <Text style={{color: cursoSeleccionado === c ? '#000' : '#fff', fontWeight:'bold'}}>{c}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TextInput style={styles.inputForm} placeholder="Celular para info" placeholderTextColor="#888" onChangeText={setCelular} keyboardType="phone-pad" />
+              <TouchableOpacity style={styles.submitBtn} onPress={() => enviarYBorrar('solicitudes_capacitacion', {nombre_completo: `${nombre} ${apellido}`, curso_interes: cursoSeleccionado, celular}, "Te enviaremos la info.")}>
+                <Text style={styles.submitBtnTxt}>INSCRIBIRME</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {currentScreen === 'Soy Nuevo' && (
+            <View>
+              <Text style={styles.sectionTitle}>¡Bienvenido!</Text>
+              <TextInput style={styles.inputForm} placeholder="Celular" placeholderTextColor="#888" onChangeText={setCelular} keyboardType="phone-pad" />
+              <TextInput style={[styles.inputForm, {height:100}]} placeholder="¿Cómo llegaste a la iglesia?" placeholderTextColor="#888" multiline onChangeText={setMensaje} />
+              <TouchableOpacity style={styles.submitBtn} onPress={() => enviarYBorrar('nuevos_miembros', {nombre, celular, mensaje}, "¡Gracias por contactarnos!")}>
+                <Text style={styles.submitBtnTxt}>ENVIAR MIS DATOS</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {currentScreen === 'Necesito Oración' && (
+            <View>
+              <Text style={styles.sectionTitle}>Muro de Oración</Text>
+              <TextInput style={styles.inputForm} placeholder="Tu pedido..." placeholderTextColor="#888" onChangeText={setMensaje} />
+              <TouchableOpacity style={styles.submitBtn} onPress={() => {
+                supabase.from('pedidos_oracion').insert([{nombre_solicitante: nombre, pedido: mensaje}]).then(cargarPedidos);
+                Alert.alert("Enviado", "Oramos juntos!");
+              }}>
+                <Text style={styles.submitBtnTxt}>PUBLICAR PEDIDO</Text>
+              </TouchableOpacity>
+              {listaPedidosOracion.map(p => (
+                <View key={p.id} style={styles.pedidoBox}>
+                  <Text style={{color:'#c5ff00', fontWeight:'bold'}}>{p.nombre_solicitante}</Text>
+                  <Text style={{color:'#fff', marginTop:5}}>"{p.pedido}"</Text>
+                  <TouchableOpacity style={styles.oroBtn} onPress={() => avisarQueOro(p)}>
+                    <Text style={{fontWeight:'bold', fontSize:12, color:'#000'}}>ESTOY ORANDO POR VOS</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {(currentScreen === 'Agenda' || currentScreen === 'Nosotros' || currentScreen === 'Contacto') && (
+            <View>
+              <Text style={styles.sectionTitle}>{currentScreen}</Text>
+              <View style={styles.bankBox}>
+                <Text style={{color: '#fff'}}>Sección {currentScreen} en desarrollo.</Text>
+              </View>
+            </View>
+          )}
+        </ScrollView>
       )}
 
       {scanning && (
@@ -386,24 +474,24 @@ const styles = StyleSheet.create({
   cardContainer: { width: width * 0.45, height: 110 },
   cardImg: { flex: 1 },
   cardOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', borderRadius: 15, backgroundColor: 'rgba(0,0,0,0.35)' },
-  cardText: { 
-    color: 'white', 
-    fontWeight: '900', 
-    fontSize: 13, 
-    textAlign: 'center', 
-    marginTop: 5,
-    textShadowColor: 'rgba(0, 0, 0, 0.8)', 
-    textShadowOffset: {width: 1, height: 1}, 
-    textShadowRadius: 5 
-  },
+  cardText: { color: 'white', fontWeight: '900', fontSize: 13, textAlign: 'center', marginTop: 5, textShadowColor: 'rgba(0, 0, 0, 0.8)', textShadowOffset: {width: 1, height: 1}, textShadowRadius: 5 },
   assistButton: { backgroundColor: '#c5ff00', margin: 20, padding: 20, borderRadius: 25, alignItems: 'center' },
   assistButtonText: { color: '#000', fontWeight: 'bold', fontSize: 18 },
   socialSection: { alignItems: 'center', paddingVertical: 10, marginBottom: 20 },
   socialTitle: { color: '#FFFFFF', fontSize: 12, fontWeight: 'bold', letterSpacing: 2, marginBottom: 10 },
   socialIconsRow: { flexDirection: 'row', justifyContent: 'space-around', width: '60%' },
   pageContainer: { flex: 1, padding: 20, backgroundColor: '#000' },
-  sectionTitle: { color: '#FFFFFF', fontSize: 24, fontWeight: 'bold' },
+  backTxt: { color: '#c5ff00', fontSize: 16, marginLeft: 10 },
+  sectionTitle: { color: '#FFFFFF', fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
   cameraContainer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'black', zIndex: 2000 },
   cancelButton: { position: 'absolute', bottom: 50, backgroundColor: '#ff4444', padding: 15, borderRadius: 12, alignSelf: 'center' },
-  cancelText: { color: 'white', fontWeight: 'bold' }
+  cancelText: { color: 'white', fontWeight: 'bold' },
+  inputForm: { backgroundColor: '#111', borderRadius: 10, padding: 15, color: '#fff', marginBottom: 15, borderWidth: 1, borderColor: '#333' },
+  submitBtn: { backgroundColor: '#c5ff00', padding: 16, borderRadius: 10, alignItems: 'center', marginTop: 10 },
+  submitBtnTxt: { color: '#000', fontWeight: 'bold' },
+  mpBtn: { backgroundColor: '#009EE3', padding: 18, borderRadius: 10, alignItems: 'center', marginBottom: 15 },
+  bankBox: { backgroundColor: '#111', padding: 20, borderRadius: 10, borderLeftWidth: 4, borderLeftColor: '#c5ff00', marginBottom: 15 },
+  chip: { paddingHorizontal: 20, paddingVertical: 10, marginRight: 10, borderRadius: 25, borderWidth: 1, borderColor: '#c5ff00' },
+  pedidoBox: { backgroundColor: '#111', padding: 15, borderRadius: 12, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: '#c5ff00' },
+  oroBtn: { backgroundColor: '#c5ff00', padding: 10, borderRadius: 8, marginTop: 12, alignItems: 'center' },
 });
