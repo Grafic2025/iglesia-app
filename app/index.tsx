@@ -386,7 +386,7 @@ export default function App() {
         return;
       }
       await supabase.from('asistencias').insert([{ miembro_id: memberId, fecha, hora_entrada: horaArg, horario_reunion: bloque }]);
-      Alert.alert("Éxito", `Bienvenido a la reunión de las ${ bloque }`);
+      Alert.alert("Exito", ("Bienvenido a la reunion de las " + bloque));
     } catch (e) {
       Alert.alert("Error", "Error al procesar.");
     } finally {
@@ -662,7 +662,7 @@ export default function App() {
                 <TextInput style={styles.inputForm} placeholder="Tu Celular" placeholderTextColor="#888" value={celular} onChangeText={setCelular} keyboardType="phone-pad" />
                 <TouchableOpacity style={styles.submitBtn} onPress={() => {
                   if (grupoSeleccionado === 'Seleccionar un Grupo') { Alert.alert("Aviso", "Por favor elegí un grupo."); return; }
-                  enviarYBorrar('solicitudes_grupos', { nombre_completo: (nombre + " " + apellido), grupo_interes: grupoSeleccionado, celular }, "¡Genial! El líder del grupo se contactará con vos.");
+                  enviarYBorrar('solicitudes_grupos', { nombre_completo: `${ nombre } ${ apellido }`, grupo_interes: grupoSeleccionado, celular }, "¡Genial! El líder del grupo se contactará con vos.");
                 }}>
                   <Text style={styles.submitBtnTxt}>QUIERO SUMARME</Text>
                 </TouchableOpacity>
@@ -745,7 +745,7 @@ export default function App() {
             <ScrollView style={{ maxHeight: 400 }}>
               {rankingTop10.map((miembro, index) => {
                 const esMiPosicion = miembro.id === memberId;
-                const medalla = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : ((index + 1) + ".");
+                const medalla = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${ index + 1}.`;
                 
                 return (
                   <View 
