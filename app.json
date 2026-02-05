@@ -2,7 +2,7 @@
   "expo": {
     "name": "Iglesia del Salvador",
     "slug": "iglesia-app",
-    "version": "1.0.4",
+    "version": "1.0.6", 
     "scheme": "iglesia-del-salvador",
     "icon": "./assets/images/Logo.png",
     "splash": {
@@ -11,16 +11,9 @@
       "backgroundColor": "#000000"
     },
     "notification": {
-      "icon": "./assets/images/Logo.png",
-      "color": "#c5ff00"
-    },
-    "ios": {
-      "bundleIdentifier": "com.grafic2026.iglesiaapp",
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSCameraUsageDescription": "Permitir que la app use la cámara para escanear asistencias.",
-        "NSMicrophoneUsageDescription": "Permitir uso del micrófono."
-      }
+      "icon": "./assets/images/notification_icon.png", 
+      "color": "#c5ff00", 
+      "iosDisplayInForeground": true 
     },
     "android": {
       "package": "com.grafic2026.iglesiaapp",
@@ -35,33 +28,25 @@
         "android.permission.VIBRATE",
         "android.permission.INTERNET",
         "android.permission.POST_NOTIFICATIONS",
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.VIBRATE",
-        "android.permission.INTERNET",
-        "android.permission.POST_NOTIFICATIONS"
+        "android.permission.WAKE_LOCK" 
       ]
     },
     "plugins": [
       [
         "expo-camera",
+        { "cameraPermission": "Permitir que la app use la cámara para escanear asistencias." }
+      ],
+      [
+        "expo-notifications",
         {
-          "cameraPermission": "Permitir que la app use la cámara para escanear asistencias."
+          "icon": "./assets/images/notification_icon.png", 
+          "color": "#c5ff00"
         }
       ],
-      "expo-notifications",
       "expo-router"
     ],
     "extra": {
-      "eas": {
-        "projectId": "1e371a5d-b4ee-46ee-9c28-40f9d567fd1f"
-      }
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/1e371a5d-b4ee-46ee-9c28-40f9d567fd1f"
+      "eas": { "projectId": "1e371a5d-b4ee-46ee-9c28-40f9d567fd1f" }
     }
   }
 }
