@@ -607,7 +607,7 @@ export default function App() {
               <TextInput style={styles.inputForm} placeholder="¿Qué edad tienes?" placeholderTextColor="#888" onChangeText={setEdad} keyboardType="numeric" />
               <TextInput style={styles.inputForm} placeholder="¿Perteneces a un grupo? (Si/No)" placeholderTextColor="#888" onChangeText={setPerteneceGrupo} />
               <TextInput style={styles.inputForm} placeholder="Celular" placeholderTextColor="#888" onChangeText={setCelular} keyboardType="phone-pad" />
-              <TouchableOpacity style={styles.submitBtn} onPress={() => enviarYBorrar('solicitudes_bautismo', { nombre_completo: `${ nombre } ${ apellido }`, edad, pertenece_grupo: perteneceGrupo, celular }, "Solicitud enviada.")}>
+              <TouchableOpacity style={styles.submitBtn} onPress={() => enviarYBorrar('solicitudes_bautismo', { nombre_completo: (nombre + " " + apellido), edad, pertenece_grupo: perteneceGrupo, celular }, "Solicitud enviada.")}>
                 <Text style={styles.submitBtnTxt}>SOLICITAR MI BAUTISMO</Text>
               </TouchableOpacity>
             </View>
@@ -633,7 +633,7 @@ export default function App() {
               )}
               <View style={{ marginTop: 20 }}>
                 <TextInput style={styles.inputForm} placeholder="Celular para info" placeholderTextColor="#888" value={celular} onChangeText={setCelular} keyboardType="phone-pad" />
-                <TouchableOpacity style={styles.submitBtn} onPress={() => enviarYBorrar('solicitudes_capacitacion', { nombre_completo: `${ nombre } ${ apellido }`, curso_interes: cursoSeleccionado, celular }, "Te enviaremos la info.")}>
+                <TouchableOpacity style={styles.submitBtn} onPress={() => enviarYBorrar('solicitudes_capacitacion', { nombre_completo: (nombre + " " + apellido), curso_interes: cursoSeleccionado, celular }, "Te enviaremos la info.")}>
                   <Text style={styles.submitBtnTxt}>INSCRIBIRME</Text>
                 </TouchableOpacity>
               </View>
@@ -662,7 +662,7 @@ export default function App() {
                 <TextInput style={styles.inputForm} placeholder="Tu Celular" placeholderTextColor="#888" value={celular} onChangeText={setCelular} keyboardType="phone-pad" />
                 <TouchableOpacity style={styles.submitBtn} onPress={() => {
                   if (grupoSeleccionado === 'Seleccionar un Grupo') { Alert.alert("Aviso", "Por favor elegí un grupo."); return; }
-                  enviarYBorrar('solicitudes_grupos', { nombre_completo: `${ nombre } ${ apellido }`, grupo_interes: grupoSeleccionado, celular }, "¡Genial! El líder del grupo se contactará con vos.");
+                  enviarYBorrar('solicitudes_grupos', { nombre_completo: (nombre + " " + apellido), grupo_interes: grupoSeleccionado, celular }, "¡Genial! El líder del grupo se contactará con vos.");
                 }}>
                   <Text style={styles.submitBtnTxt}>QUIERO SUMARME</Text>
                 </TouchableOpacity>
@@ -745,7 +745,7 @@ export default function App() {
             <ScrollView style={{ maxHeight: 400 }}>
               {rankingTop10.map((miembro, index) => {
                 const esMiPosicion = miembro.id === memberId;
-                const medalla = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${ index + 1}.`;
+                const medalla = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : ((index + 1) + ".");
                 
                 return (
                   <View 
