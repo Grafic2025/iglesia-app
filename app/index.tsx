@@ -662,7 +662,7 @@ export default function App() {
                 <TextInput style={styles.inputForm} placeholder="Tu Celular" placeholderTextColor="#888" value={celular} onChangeText={setCelular} keyboardType="phone-pad" />
                 <TouchableOpacity style={styles.submitBtn} onPress={() => {
                   if (grupoSeleccionado === 'Seleccionar un Grupo') { Alert.alert("Aviso", "Por favor elegí un grupo."); return; }
-                  enviarYBorrar('solicitudes_grupos', { nombre_completo: `${ nombre } ${ apellido }`, grupo_interes: grupoSeleccionado, celular }, "¡Genial! El líder del grupo se contactará con vos.");
+                  enviarYBorrar('solicitudes_grupos', { nombre_completo: (nombre + " " + apellido), grupo_interes: grupoSeleccionado, celular }, "¡Genial! El líder del grupo se contactará con vos.");
                 }}>
                   <Text style={styles.submitBtnTxt}>QUIERO SUMARME</Text>
                 </TouchableOpacity>
