@@ -302,7 +302,7 @@ export default function App() {
         await sendPushNotification(
           tokenData.token_notificacion,
           "¡Están orando por vos! 🙏",
-          `${ nombre } se unió en oración por tu pedido.`
+          `${ nombre } se unio en oracion por tu pedido.`
         );
       }
 
