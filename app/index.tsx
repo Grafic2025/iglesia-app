@@ -80,6 +80,7 @@ export default function App() {
   const [rankingTop10, setRankingTop10] = useState([]);
   const [showRanking, setShowRanking] = useState(false);
   const [posicionUsuario, setPosicionUsuario] = useState(null);
+  const [showHistorial, setShowHistorial] = useState(false);
 
   const opcionesCursos = ["Fundamentos cristianos", "Instituto Bíblico", "Escuela de Música", "Escuela de Adoración", "Escuela de Música Kids", "Escuela de Orientación", "Familiar", "Academia de Arte", "Oración y Consejeria", "Talleres de formación biblica", "Liderazgo"];
   const opcionesGrupos = ["Jóvenes", "Matrimonios", "Hombres", "Mujeres", "Adultos Mayores", "Pre-Adolescentes"];
@@ -280,6 +281,7 @@ export default function App() {
       console.error("Error cargando ranking:", e);
     }
   };
+
 
   const avisarQueOro = async (pedido) => {
     try {
@@ -512,6 +514,15 @@ export default function App() {
             >
               <FontAwesome name="trophy" size={16} color="#000" />
               <Text style={styles.rankingButtonText}>VER RANKING TOP 10</Text>
+            </TouchableOpacity>
+            
+            {/* Botón Ver Historial */}
+            <TouchableOpacity 
+              style={styles.historialButton} 
+              onPress={() => setShowHistorial(true)}
+            >
+              <FontAwesome name="calendar" size={16} color="#000" />
+              <Text style={styles.historialButtonText}>VER MI HISTORIAL</Text>
             </TouchableOpacity>
           </View>
 
@@ -773,6 +784,44 @@ export default function App() {
           </View>
         </View>
       )}
+
+      {/* MODAL DE HISTORIAL */}
+      {showHistorial && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>📅 MI HISTORIAL</Text>
+              <TouchableOpacity onPress={() => setShowHistorial(false)}>
+                <FontAwesome name="close" size={24} color="#c5ff00" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={{ maxHeight: 400 }}>
+              {asistenciasDetalle.slice(0, 10).map((asist: any) => {
+                const fecha = new Date(asist.fecha);
+                const dia = fecha.getDate();
+                const mes = fecha.getMonth() + 1;
+                
+                return (
+                  <View key={asist.id} style={styles.historialItem}>
+                    <View style={styles.historialFecha}>
+                      <Text style={styles.historialDia}>{dia}</Text>
+                      <Text style={styles.historialMes}>/{mes}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.historialHorario}>{asist.horario_reunion}</Text>
+                      <Text style={styles.historialFechaCompleta}>{asist.fecha}</Text>
+                    </View>
+                    <View style={styles.historialBadge}>
+                      <Text>✅</Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -873,5 +922,14 @@ const styles = StyleSheet.create({
   rankingRachaNumero: { color: '#c5ff00', fontSize: 18, fontWeight: 'bold' },
   rankingRachaLabel: { fontSize: 16 },
   tuPosicionBox: { marginTop: 15, padding: 12, backgroundColor: '#333', borderRadius: 12 },
-  tuPosicionText: { color: '#c5ff00', textAlign: 'center', fontWeight: 'bold' }
+  tuPosicionText: { color: '#c5ff00', textAlign: 'center', fontWeight: 'bold' },
+  historialButton: { flexDirection: 'row', backgroundColor: '#A8D500', padding: 12, borderRadius: 12, marginTop: 10, justifyContent: 'center', alignItems: 'center', gap: 8 },
+  historialButtonText: { color: '#000', fontWeight: 'bold', fontSize: 13 },
+  historialItem: { flexDirection: 'row', alignItems: 'center', padding: 15, marginBottom: 10, backgroundColor: '#252525', borderRadius: 12 },
+  historialFecha: { marginRight: 15, alignItems: 'center', width: 50 },
+  historialDia: { color: '#c5ff00', fontSize: 24, fontWeight: 'bold' },
+  historialMes: { color: '#888', fontSize: 14 },
+  historialHorario: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  historialFechaCompleta: { color: '#888', fontSize: 12, marginTop: 2 },
+  historialBadge: { marginLeft: 'auto' },
 });
