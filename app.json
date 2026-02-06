@@ -64,6 +64,16 @@
     "updates": {
       "url": "https://u.expo.dev/1e371a5d-b4ee-46ee-9c28-40f9d567fd1f"
     },
-    "ios": {}
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "fb",
+          "mpago",
+          "mercadopago",
+          "whatsapp"
+        ]
+      }
+    }
   }
 }
