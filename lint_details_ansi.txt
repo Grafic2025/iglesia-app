@@ -1,0 +1,17 @@
+
+C:\iglesia-app\app\index.tsx
+    1:1   warning  Unexpected Unicode BOM (Byte Order Mark)                                                                                                     unicode-bom
+   41:16  warning  'height' is assigned a value but never used                                                                                                  @typescript-eslint/no-unused-vars
+   76:10  warning  'permission' is assigned a value but never used                                                                                              @typescript-eslint/no-unused-vars
+  115:6   warning  React Hook useEffect has missing dependencies: 'calcularRacha' and 'cargarDatosMiembro'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  177:14  warning  'e' is defined but never used                                                                                                                @typescript-eslint/no-unused-vars
+  242:14  warning  'e' is defined but never used                                                                                                                @typescript-eslint/no-unused-vars
+  588:57  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                              react/no-unescaped-entities
+  588:68  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                              react/no-unescaped-entities
+
+C:\iglesia-app\app\mensajes.tsx
+  21:8  warning  React Hook useEffect has a missing dependency: 'sound'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+✖ 9 problems (2 errors, 7 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

@@ -1,0 +1,9 @@
+
+C:\iglesia-app\app\index.tsx
+    1:1   warning  Unexpected Unicode BOM (Byte Order Mark)  unicode-bom
+  123:14  warning  '_e' is defined but never used            @typescript-eslint/no-unused-vars
+  242:14  warning  '_e' is defined but never used            @typescript-eslint/no-unused-vars
+
+✖ 3 problems (0 errors, 3 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

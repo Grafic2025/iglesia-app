@@ -2,13 +2,13 @@
   "expo": {
     "name": "Iglesia del Salvador",
     "slug": "iglesia-app",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "scheme": "iglesia-del-salvador",
-    "icon": "./assets/images/Logo.png",
+    "icon": "./assets/images/LogoWhite.png",
     "splash": {
-      "image": "./assets/images/Logo.png",
+      "image": "./assets/images/LogoWhite.png",
       "resizeMode": "contain",
-      "backgroundColor": "#000000"
+      "backgroundColor": "#FFFFFF"
     },
     "notification": {
       "icon": "./assets/images/notification_icon.png",
@@ -19,16 +19,10 @@
       "package": "com.grafic2026.iglesiaapp",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/Logo.png",
-        "backgroundColor": "#000000"
+        "foregroundImage": "./assets/images/LogoWhite.png",
+        "backgroundColor": "#FFFFFF"
       },
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.VIBRATE",
-        "android.permission.INTERNET",
-        "android.permission.POST_NOTIFICATIONS",
-        "android.permission.WAKE_LOCK",
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
         "android.permission.VIBRATE",
@@ -41,16 +35,10 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Permitir que la app use la cámara para escanear asistencias."
+          "cameraPermission": "Permite que la app acceda a la cámara para registrar tu asistencia."
         }
       ],
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/images/notification_icon.png",
-          "color": "#c5ff00"
-        }
-      ],
+      "expo-notifications",
       "expo-router"
     ],
     "extra": {
@@ -71,7 +59,8 @@
           "fb",
           "mpago",
           "mercadopago",
-          "whatsapp"
+          "whatsapp",
+          "tiktok"
         ]
       }
     }

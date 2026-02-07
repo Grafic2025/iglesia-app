@@ -1,0 +1,13 @@
+
+C:\iglesia-app\app\index.tsx
+    1:1   warning  Unexpected Unicode BOM (Byte Order Mark)                         unicode-bom
+   76:10  warning  '_' is assigned a value but never used                           @typescript-eslint/no-unused-vars
+   99:9   warning  'indexRef' is assigned a value but never used                    @typescript-eslint/no-unused-vars
+  123:14  warning  'e' is defined but never used                                    @typescript-eslint/no-unused-vars
+  223:14  warning  'e' is defined but never used                                    @typescript-eslint/no-unused-vars
+  569:57  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  569:68  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+✖ 7 problems (2 errors, 5 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+
