@@ -25,6 +25,18 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
+## Running Tests
+
+This project includes a basic Jest setup with a sample unit test for the
+`useAppContentLogic` hook. To run the test suite:
+
+```bash
+npm run test
+```
+
+Additional tests can be added under the `__tests__` directory and will run
+automatically.
+
 ## Get a fresh project
 
 When you're ready, run:

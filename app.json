@@ -2,7 +2,7 @@
   "expo": {
     "name": "Iglesia del Salvador",
     "slug": "iglesia-app",
-    "version": "1.1.2",
+    "version": "1.1.7",
     "scheme": "iglesia-del-salvador",
     "icon": "./assets/images/LogoWhite.png",
     "splash": {
@@ -17,6 +17,7 @@
     },
     "android": {
       "package": "com.grafic2026.iglesiaapp",
+      "versionCode": 7,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/LogoWhite.png",
@@ -28,8 +29,11 @@
         "android.permission.VIBRATE",
         "android.permission.INTERNET",
         "android.permission.POST_NOTIFICATIONS",
-        "android.permission.WAKE_LOCK"
-      ]
+        "android.permission.WAKE_LOCK",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ],
+      "usesCleartextTraffic": true
     },
     "plugins": [
       [
@@ -38,8 +42,23 @@
           "cameraPermission": "Permite que la app acceda a la cámara para registrar tu asistencia."
         }
       ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Permite que la app use Face ID para iniciar sesión de forma segura."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permite que la app acceda a tu galería para elegir una foto de perfil.",
+          "cameraPermission": "Permite que la app use la cámara para tomar tu foto de perfil."
+        }
+      ],
       "expo-notifications",
-      "expo-router"
+      "expo-router",
+      "expo-secure-store",
+      "expo-font"
     ],
     "extra": {
       "eas": {
@@ -53,6 +72,8 @@
       "url": "https://u.expo.dev/1e371a5d-b4ee-46ee-9c28-40f9d567fd1f"
     },
     "ios": {
+      "bundleIdentifier": "com.grafic2026.iglesiaapp",
+      "buildNumber": "7",
       "supportsTablet": true,
       "infoPlist": {
         "LSApplicationQueriesSchemes": [

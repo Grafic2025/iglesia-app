@@ -1,10 +1,9 @@
 import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import { supabase } from './supabase';
 
 // 1. FUNCIÓN PARA REGISTRAR EL TOKEN (LA QUE YA TENÍAS)
-export async function registerForPushNotifications(memberId) {
+export async function registerForPushNotifications(memberId: string | null) {
   console.log('Intentando registrar notificaciones...');
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -24,8 +23,8 @@ export async function registerForPushNotifications(memberId) {
     const tokenData = await Notifications.getExpoPushTokenAsync({
       projectId: "1e371a5d-b4ee-46ee-9c28-40f9d567fd1f"
     });
-    
-    const token = tokenData.data; 
+
+    const token = tokenData.data;
 
     // Guardamos en la tabla auxiliar
     await supabase.from('push_tokens').upsert({ token }, { onConflict: 'token' });
@@ -53,15 +52,18 @@ export async function registerForPushNotifications(memberId) {
       });
     }
 
-    return token; 
-  } catch (e) {
-    console.error('Error al obtener token:', e);
+    return token;
+  } catch (e: any) {
+    console.error('Error al obtener token de Expo:', e.message || e);
+    if (e.message?.includes('Network request failed')) {
+      console.log('Sugerencia: Revisa la conexión a internet del dispositivo y si el firewall permite conexiones a exp.host');
+    }
     return null;
   }
 }
 
 // 2. FUNCIÓN PARA ENVIAR NOTIFICACIONES DINÁMICAS
-export async function sendPushNotification(expoPushToken, title, body, mediaUrl = null) {
+export async function sendPushNotification(expoPushToken: string, title: string, body: string, mediaUrl: string | null = null) {
   let finalImage = mediaUrl;
 
   // 1. Lógica para detectar link de YouTube y extraer la miniatura
@@ -69,7 +71,7 @@ export async function sendPushNotification(expoPushToken, title, body, mediaUrl 
     const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
     const match = mediaUrl.match(regExp);
     const videoId = (match && match[7].length === 11) ? match[7] : null;
-    
+
     if (videoId) {
       // Usamos la miniatura de máxima resolución de YouTube
       finalImage = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
@@ -83,23 +85,19 @@ export async function sendPushNotification(expoPushToken, title, body, mediaUrl 
     title: title,
     body: body,
     mutableContent: true,
+    channelId: 'default',
+    priority: 'high',
     data: { title, body },
   };
 
   // 3. Si hay imagen (sea de YouTube o link directo), la adjuntamos
   if (finalImage && finalImage.trim() !== "") {
     message.data.image = finalImage;
-    message.android = {
-      notification: {
-        image: finalImage,
-        priority: 'high'
-      }
-    };
     message.attachments = [{ url: finalImage }];
   }
 
   try {
-    await fetch('https://exp.host/--/api/v2/push/send', {
+    const response = await fetch('https://exp.host/--/api/v2/push/send', {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -107,7 +105,8 @@ export async function sendPushNotification(expoPushToken, title, body, mediaUrl 
       },
       body: JSON.stringify(message),
     });
-    console.log("Notificación enviada. Imagen utilizada:", finalImage);
+    const resData = await response.json();
+    console.log("Notificación enviada. Respuesta Expo:", resData);
   } catch (error) {
     console.error("Error al enviar notificación:", error);
   }
