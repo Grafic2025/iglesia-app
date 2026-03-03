@@ -12,7 +12,7 @@
     },
     "production": {
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "apk"
       },
       "env": {
         "EXPO_USE_GRADLE_8": "true"
