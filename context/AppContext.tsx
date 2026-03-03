@@ -19,6 +19,7 @@ export interface AppContextType {
     currentScreen: string;
     setCurrentScreen: (s: string) => void;
     logout: () => void;
+    deleteAccount: () => Promise<void>;
     login: (id: string, name: string, surname: string) => Promise<void>;
     loginWithBiometrics: () => Promise<boolean>;
     refreshData: () => Promise<void>;
@@ -157,14 +158,82 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     /**
+     * Elimina completamente la cuenta del usuario:
+     * - Borra datos relacionados en Supabase (asistencias, pedidos, notificaciones, equipos)
+     * - Elimina la foto de perfil del storage
+     * - Borra el registro del miembro
+     * - Limpia todo AsyncStorage y SecureStore
+     * - Resetea todos los estados de la app
+     */
+    const deleteAccount = async () => {
+        if (!memberId) return;
+        console.log('[DELETE-ACCOUNT] Iniciando eliminación completa...');
+        try {
+            // 1. Borrar datos relacionados en Supabase
+            await Promise.allSettled([
+                supabase.from('asistencias').delete().eq('miembro_id', memberId),
+                supabase.from('pedidos_oracion').delete().eq('miembro_id', memberId),
+                supabase.from('miembros_equipos').delete().eq('miembro_id', memberId),
+                supabase.from('bloqueos_servidores').delete().eq('miembro_id', memberId),
+                supabase.from('premios_entregados').delete().eq('miembro_id', memberId),
+            ]);
+            console.log('[DELETE-ACCOUNT] Datos relacionados eliminados.');
+
+            // 2. Borrar foto de perfil del storage
+            try {
+                await supabase.storage.from('perfiles').remove([`profile_${memberId}.jpg`]);
+            } catch { /* puede no existir */ }
+
+            // 3. Borrar el registro del miembro
+            const { error: deleteError } = await supabase.from('miembros').delete().eq('id', memberId);
+            if (deleteError) console.error('[DELETE-ACCOUNT] Error borrando miembro:', deleteError);
+            else console.log('[DELETE-ACCOUNT] Registro de miembro eliminado.');
+
+            // 4. Limpiar TODO el almacenamiento local
+            await SecureStore.deleteItemAsync('memberId');
+            await AsyncStorage.clear();
+            console.log('[DELETE-ACCOUNT] Almacenamiento local limpiado.');
+
+            // 5. Resetear todos los estados
+            setMemberId(null);
+            setIsLoggedIn(false);
+            setNombre('');
+            setApellido('');
+            setFotoUrl(null);
+            setFechaNacimiento(null);
+            setZona(null);
+            setEsAdmin(false);
+            setEsServidor(false);
+            setRachaUsuario(0);
+            setAsistenciasDetalle([]);
+            setNotificationInbox([]);
+            setCurrentScreen('Inicio');
+            console.log('[DELETE-ACCOUNT] Cuenta eliminada exitosamente.');
+        } catch (e) {
+            console.error('[DELETE-ACCOUNT] ERROR:', e);
+            throw e;
+        }
+    };
+
+    /**
      * Agrega una nueva notificación al buzón interno de la aplicación.
      * Guarda la lista actualizada en AsyncStorage.
      * 
      * @param notif Objeto con los datos de la notificación.
      */
     const addNotificationToInbox = useCallback((notif: any) => {
-        const newNotif = { ...notif, id: Date.now().toString(), date: new Date().toISOString(), read: false };
         setNotificationInbox(prev => {
+            // Deduplicación: ignorar si ya existe una notificación con mismo título+cuerpo en los últimos 10 minutos
+            const TEN_MINUTES = 10 * 60 * 1000;
+            const now = Date.now();
+            const isDuplicate = prev.some(n =>
+                n.title === notif.title &&
+                n.body === notif.body &&
+                (now - new Date(n.date).getTime()) < TEN_MINUTES
+            );
+            if (isDuplicate) return prev; // No agregar si es duplicada reciente
+
+            const newNotif = { ...notif, id: now.toString(), date: new Date().toISOString(), read: false };
             const updated = [newNotif, ...prev];
             AsyncStorage.setItem('notificationInbox', JSON.stringify(updated));
             return updated;
@@ -351,7 +420,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         <AppContext.Provider value={{
             isLoggedIn, memberId, nombre, apellido, fotoUrl, fechaNacimiento, zona, loading,
             noticiasSupabase, serieEsenciales, rachaUsuario, asistenciasDetalle,
-            currentScreen, setCurrentScreen, logout, login, loginWithBiometrics, refreshData,
+            currentScreen, setCurrentScreen, logout, deleteAccount, login, loginWithBiometrics, refreshData,
             isCurrentlyLive, liveVideoUrl, esServidor, esAdmin, notificationInbox, addNotificationToInbox,
             unreadCount, markNotificationRead, markAllRead
         }}>

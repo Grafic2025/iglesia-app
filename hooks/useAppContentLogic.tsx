@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as Notifications from 'expo-notifications';
@@ -41,6 +42,7 @@ export function useAppContentLogic() {
     setCurrentScreen,
     login,
     logout,
+    deleteAccount,
     refreshData,
     isCurrentlyLive,
     liveVideoUrl,
@@ -168,16 +170,22 @@ export function useAppContentLogic() {
 
       if (finalMemberId) {
         await login(finalMemberId, localNombre.trim(), localApellido.trim());
-        try {
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: '¡Bienvenido a Iglesia del Salvador! 🙌',
-              body: `Hola ${localNombre.trim()}, nos alegra que seas parte de nuestra comunidad. ¡Dios te bendiga!`,
-            },
-            trigger: { seconds: 3, type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL },
-          });
-        } catch {
-          // los permisos de notificación podrían no estar activos
+
+        // Solo enviar notificación de bienvenida la PRIMERA vez que el usuario ingresa
+        const yaBienvenido = await AsyncStorage.getItem('welcomeShown');
+        if (!yaBienvenido) {
+          try {
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: '¡Bienvenido a Iglesia del Salvador! 🙌',
+                body: `Hola ${localNombre.trim()}, nos alegra que seas parte de nuestra comunidad. ¡Dios te bendiga!`,
+              },
+              trigger: { seconds: 3, type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL },
+            });
+            await AsyncStorage.setItem('welcomeShown', 'true');
+          } catch {
+            // los permisos de notificación podrían no estar activos
+          }
         }
       }
     } catch (e: any) {
@@ -428,5 +436,44 @@ export function useAppContentLogic() {
     asistenciasDetalle,
     refreshData,
     logout: handleLogout,
+    deleteAccount: async () => {
+      Alert.alert(
+        '⚠️ Eliminar cuenta',
+        '¿Estás seguro? Se borrarán todos tus datos, asistencias, notas y foto de perfil. Esta acción NO se puede deshacer.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Sí, eliminar todo',
+            style: 'destructive',
+            onPress: () => {
+              Alert.alert(
+                '🚨 Última confirmación',
+                'Tu cuenta será eliminada permanentemente. ¿Continuar?',
+                [
+                  { text: 'No, volver', style: 'cancel' },
+                  {
+                    text: 'Eliminar',
+                    style: 'destructive',
+                    onPress: async () => {
+                      try {
+                        setCurrentScreen('Inicio');
+                        if (isMenuOpen) {
+                          setIsMenuOpen(false);
+                          Animated.timing(slideAnim, { toValue: -width * 0.8, duration: 150, useNativeDriver: true }).start();
+                        }
+                        await deleteAccount();
+                        Alert.alert('Cuenta eliminada', 'Todos tus datos fueron borrados. ¡Que Dios te bendiga! 🙏');
+                      } catch (e) {
+                        Alert.alert('Error', 'No se pudo eliminar la cuenta. Intentá de nuevo.');
+                      }
+                    },
+                  },
+                ]
+              );
+            },
+          },
+        ]
+      );
+    },
   };
 }

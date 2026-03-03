@@ -40,6 +40,7 @@ export default function RootScreen() {
     unreadCount,
     esServidor,
     logout,
+    deleteAccount,
     showRanking,
     setShowRanking,
     showHistorial,
@@ -129,6 +130,7 @@ export default function RootScreen() {
               navigateTo={navigateTo}
               pickImage={pickImage}
               logout={logout}
+              deleteAccount={deleteAccount}
               refreshData={refreshData}
             />
           </Animated.View>

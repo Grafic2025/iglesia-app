@@ -17,6 +17,7 @@ interface CustomDrawerProps {
     navigateTo: (screen: string) => void;
     pickImage: () => void;
     logout: () => void;
+    deleteAccount: () => Promise<void>;
     refreshData: () => Promise<void>;
 }
 
@@ -35,6 +36,7 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
     navigateTo,
     pickImage,
     logout,
+    deleteAccount,
     refreshData
 }) => {
     const [refreshing, setRefreshing] = useState(false);
@@ -167,6 +169,12 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
                         <MaterialCommunityIcons name="logout" size={20} color="#ff4444" />
                         <Text style={styles.logoutText}>CERRAR SESIÓN</Text>
                     </View>
+                </TouchableOpacity>
+
+                {/* Eliminar cuenta */}
+                <TouchableOpacity style={styles.deleteButton} onPress={deleteAccount}>
+                    <MaterialCommunityIcons name="account-remove" size={16} color="#666" />
+                    <Text style={styles.deleteText}>Eliminar mi cuenta</Text>
                 </TouchableOpacity>
             </ScrollView>
         </Animated.View>
@@ -369,5 +377,20 @@ const styles = StyleSheet.create({
         fontSize: 13,
         marginLeft: 12,
         letterSpacing: 2
+    },
+    deleteButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 14,
+        marginTop: 8,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(255,255,255,0.04)',
+    },
+    deleteText: {
+        color: '#555',
+        fontSize: 11,
+        fontWeight: '600',
+        marginLeft: 6,
     }
 });

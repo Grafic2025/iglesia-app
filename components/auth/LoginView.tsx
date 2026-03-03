@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
 import {
+    Alert,
     Animated,
     KeyboardAvoidingView,
     Platform,
@@ -25,7 +26,8 @@ interface LoginViewProps {
 }
 
 /**
- * LoginView con diseño premium, Glassmorphism y soporte de autenticación biométrica.
+ * LoginView con diseño premium y soporte de autenticación biométrica.
+ * El ícono biométrico (huella/face) siempre se muestra si el dispositivo lo soporta.
  */
 export const LoginView: React.FC<LoginViewProps> = ({
     localNombre,
@@ -41,38 +43,56 @@ export const LoginView: React.FC<LoginViewProps> = ({
     const insets = useSafeAreaInsets();
     const isButtonDisabled = !localNombre.trim() || !localApellido.trim();
 
-    const showBiometric = biometricAvailable && hasSavedSession && !!handleBiometricLogin;
+    // Mostrar el ícono siempre que el dispositivo tenga biometría disponible
+    const showBiometricIcon = biometricAvailable && biometricType !== 'none' && !!handleBiometricLogin;
+    // Funcional solo si hay sesión guardada
+    const biometricActive = showBiometricIcon && !!hasSavedSession;
 
-    // Animación del ícono biométrico
+    // Animaciones
     const pulseAnim = useRef(new Animated.Value(1)).current;
     const glowAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        if (!showBiometric) return;
+        if (!showBiometricIcon) return;
+
         const pulse = Animated.loop(
             Animated.sequence([
-                Animated.timing(pulseAnim, { toValue: 1.12, duration: 900, useNativeDriver: true }),
-                Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
+                Animated.timing(pulseAnim, { toValue: biometricActive ? 1.1 : 1.04, duration: 1000, useNativeDriver: true }),
+                Animated.timing(pulseAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
             ])
         );
         const glow = Animated.loop(
             Animated.sequence([
-                Animated.timing(glowAnim, { toValue: 1, duration: 1200, useNativeDriver: false }),
-                Animated.timing(glowAnim, { toValue: 0, duration: 1200, useNativeDriver: false }),
+                Animated.timing(glowAnim, { toValue: 1, duration: 1400, useNativeDriver: false }),
+                Animated.timing(glowAnim, { toValue: 0, duration: 1400, useNativeDriver: false }),
             ])
         );
         pulse.start();
         glow.start();
         return () => { pulse.stop(); glow.stop(); };
-    }, [showBiometric]);
+    }, [showBiometricIcon, biometricActive]);
 
     const borderColor = glowAnim.interpolate({
         inputRange: [0, 1],
-        outputRange: ['rgba(197,255,0,0.15)', 'rgba(197,255,0,0.7)'],
+        outputRange: biometricActive
+            ? ['rgba(197,255,0,0.2)', 'rgba(197,255,0,0.8)']
+            : ['rgba(80,80,80,0.2)', 'rgba(80,80,80,0.5)'],
     });
 
     const iconName = biometricType === 'facial' ? 'face-recognition' : 'fingerprint';
-    const biometricLabel = biometricType === 'facial' ? 'Entrar con Face ID' : 'Entrar con huella';
+    const biometricLabel = biometricType === 'facial' ? 'Face ID' : 'Huella dactilar';
+
+    const handleBiometricPress = () => {
+        if (!biometricActive) {
+            Alert.alert(
+                '🔐 Biometría',
+                'Ingresá una vez con tu nombre y apellido para habilitar el acceso rápido con ' + biometricLabel + '.',
+                [{ text: 'Entendido', style: 'default' }]
+            );
+            return;
+        }
+        handleBiometricLogin?.();
+    };
 
     return (
         <View style={styles.background}>
@@ -88,37 +108,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
                             <Text style={styles.brandTitle}>IGLESIA DEL SALVADOR</Text>
                             <View style={styles.divider} />
                         </View>
-
-                        {/* ===== BIOMETRIC BUTTON (si hay sesión previa) ===== */}
-                        {showBiometric && (
-                            <View style={styles.biometricSection}>
-                                <TouchableOpacity
-                                    style={styles.biometricButtonWrapper}
-                                    onPress={handleBiometricLogin}
-                                    activeOpacity={0.8}
-                                >
-                                    <Animated.View
-                                        style={[
-                                            styles.biometricButton,
-                                            { borderColor, transform: [{ scale: pulseAnim }] },
-                                        ]}
-                                    >
-                                        <MaterialCommunityIcons
-                                            name={iconName as any}
-                                            size={44}
-                                            color="#c5ff00"
-                                        />
-                                    </Animated.View>
-                                </TouchableOpacity>
-                                <Text style={styles.biometricLabel}>{biometricLabel}</Text>
-
-                                <View style={styles.separator}>
-                                    <View style={styles.separatorLine} />
-                                    <Text style={styles.separatorText}>o ingresá manualmente</Text>
-                                    <View style={styles.separatorLine} />
-                                </View>
-                            </View>
-                        )}
 
                         {/* ===== INPUTS ===== */}
                         <View style={styles.inputGroup}>
@@ -152,6 +141,43 @@ export const LoginView: React.FC<LoginViewProps> = ({
                         >
                             <Text style={styles.loginButtonText}>INGRESAR</Text>
                         </TouchableOpacity>
+
+                        {/* ===== BIOMETRIC SECTION (siempre visible si soportado) ===== */}
+                        {showBiometricIcon && (
+                            <View style={styles.biometricSection}>
+                                <View style={styles.separator}>
+                                    <View style={styles.separatorLine} />
+                                    <Text style={styles.separatorText}>o usá tu {biometricLabel}</Text>
+                                    <View style={styles.separatorLine} />
+                                </View>
+
+                                <TouchableOpacity
+                                    style={styles.biometricButtonWrapper}
+                                    onPress={handleBiometricPress}
+                                    activeOpacity={0.75}
+                                >
+                                    <Animated.View
+                                        style={[
+                                            styles.biometricButton,
+                                            {
+                                                borderColor,
+                                                transform: [{ scale: pulseAnim }],
+                                                opacity: biometricActive ? 1 : 0.45,
+                                            },
+                                        ]}
+                                    >
+                                        <MaterialCommunityIcons
+                                            name={iconName as any}
+                                            size={40}
+                                            color={biometricActive ? '#c5ff00' : '#666'}
+                                        />
+                                    </Animated.View>
+                                    <Text style={[styles.biometricLabel, !biometricActive && styles.biometricLabelInactive]}>
+                                        {biometricActive ? `Entrar con ${biometricLabel}` : `${biometricLabel} (ingresá primero)`}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
                     </View>
                 </KeyboardAvoidingView>
             </View>
@@ -195,55 +221,11 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
 
-    // Biometric
-    biometricSection: {
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    biometricButtonWrapper: {
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    biometricButton: {
-        width: 88,
-        height: 88,
-        borderRadius: 44,
-        backgroundColor: '#1a1a1a',
-        borderWidth: 2,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 10,
-    },
-    biometricLabel: {
-        color: '#c5ff00',
-        fontSize: 13,
-        fontWeight: '700',
-        letterSpacing: 0.5,
-        marginBottom: 20,
-    },
-    separator: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        width: '100%',
-        gap: 8,
-    },
-    separatorLine: {
-        flex: 1,
-        height: 1,
-        backgroundColor: '#2a2a2a',
-    },
-    separatorText: {
-        color: '#555',
-        fontSize: 11,
-        fontWeight: '600',
-        letterSpacing: 0.5,
-    },
-
-    inputGroup: { gap: 20, marginBottom: 30, marginTop: 20 },
+    inputGroup: { gap: 14, marginBottom: 22 },
     inputWrapper: {
         backgroundColor: '#1d1d1d',
         borderRadius: 15,
-        height: 48,
+        height: 50,
         paddingHorizontal: 18,
         justifyContent: 'center',
     },
@@ -258,4 +240,51 @@ const styles = StyleSheet.create({
     },
     loginButtonDisabled: { opacity: 0.4 },
     loginButtonText: { color: '#000', fontWeight: '900', fontSize: 14, letterSpacing: 1 },
+
+    // Biometric — ahora en la parte de abajo
+    biometricSection: {
+        alignItems: 'center',
+        marginTop: 24,
+    },
+    separator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+        gap: 8,
+        marginBottom: 20,
+    },
+    separatorLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: '#2a2a2a',
+    },
+    separatorText: {
+        color: '#555',
+        fontSize: 11,
+        fontWeight: '600',
+        letterSpacing: 0.5,
+    },
+    biometricButtonWrapper: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    biometricButton: {
+        width: 78,
+        height: 78,
+        borderRadius: 39,
+        backgroundColor: '#1a1a1a',
+        borderWidth: 2,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 10,
+    },
+    biometricLabel: {
+        color: '#c5ff00',
+        fontSize: 12,
+        fontWeight: '700',
+        letterSpacing: 0.5,
+    },
+    biometricLabelInactive: {
+        color: '#444',
+    },
 });

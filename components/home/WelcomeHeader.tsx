@@ -40,7 +40,7 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
 
         {/* Church Title */}
         <View style={styles.titleContainer}>
-          <Text style={styles.churchTitle}>IGLESIA DEL SALVADOR</Text>
+          <Text style={styles.churchTitle}>IGLESIA DEL SALVADO</Text>
           <View style={styles.titleUnderline} />
         </View>
 

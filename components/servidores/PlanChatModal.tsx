@@ -9,6 +9,7 @@ import {
     Alert,
     Dimensions,
     FlatList,
+    Image,
     KeyboardAvoidingView,
     Linking,
     Platform,
@@ -113,19 +114,24 @@ export const PlanChatModal: React.FC<PlanChatModalProps> = ({
 
     const uploadFile = async (uri: string, fileName: string, type: string) => {
         try {
-            const formData = new FormData();
-            formData.append('file', {
-                uri: Platform.OS === 'ios' ? uri.replace('file://', '') : uri,
-                name: fileName,
-                type: type,
-            } as any);
+            // Log para debug
+            console.log("[STORAGE] Intentando subir archivo:", fileName, "tipo:", type);
+
+            // Fix URI para fetch/blob en React Native
+            const fetchUri = Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
+            const response = await fetch(fetchUri);
+            const blob = await response.blob();
 
             const fileExt = fileName.split('.').pop();
             const path = `${planId}/${Date.now()}.${fileExt}`;
 
             const { data, error } = await supabase.storage
                 .from('chat-attachments')
-                .upload(path, formData);
+                .upload(path, blob, {
+                    contentType: type,
+                    cacheControl: '3600',
+                    upsert: false
+                });
 
             if (error) throw error;
 
@@ -135,42 +141,52 @@ export const PlanChatModal: React.FC<PlanChatModalProps> = ({
 
             return publicUrl;
         } catch (e: any) {
-            console.error('Upload Error:', e);
-            Alert.alert("Error", "No se pudo subir el archivo: " + e.message);
+            console.error('[STORAGE] Error de subida:', e);
+            Alert.alert("Error de subida", e.message);
             return null;
         }
     };
 
     const pickImage = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images', 'videos'],
-            quality: 0.7,
-        });
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ['images', 'videos'],
+                quality: 0.7,
+            });
 
-        if (!result.canceled) {
-            const asset = result.assets[0];
-            setSending(true);
-            const url = await uploadFile(asset.uri, asset.fileName || 'image.jpg', asset.mimeType || 'image/jpeg');
-            if (url) {
-                await sendMessageInternal("", url, asset.type === 'video' ? 'video' : 'image', asset.fileName || 'Imagen');
+            if (!result.canceled) {
+                const asset = result.assets[0];
+                setSending(true);
+                const url = await uploadFile(asset.uri, asset.fileName || 'file.jpg', asset.mimeType || 'image/jpeg');
+                if (url) {
+                    await sendMessageInternal("", url, asset.type === 'video' ? 'video' : 'image', asset.fileName || 'Multimedia');
+                }
+                setSending(false);
             }
+        } catch (e) {
+            console.error(e);
             setSending(false);
         }
     };
 
     const pickDocument = async () => {
-        const result = await DocumentPicker.getDocumentAsync({
-            type: '*/*',
-            copyToCacheDirectory: true,
-        });
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: '*/*',
+                copyToCacheDirectory: true,
+            });
 
-        if (!result.canceled) {
-            const asset = result.assets[0];
-            setSending(true);
-            const url = await uploadFile(asset.uri, asset.name, asset.mimeType || 'application/octet-stream');
-            if (url) {
-                await sendMessageInternal("", url, 'document', asset.name);
+            if (!result.canceled) {
+                const asset = result.assets[0];
+                setSending(true);
+                const url = await uploadFile(asset.uri, asset.name, asset.mimeType || 'application/octet-stream');
+                if (url) {
+                    await sendMessageInternal("", url, 'document', asset.name);
+                }
+                setSending(false);
             }
+        } catch (e) {
+            console.error(e);
             setSending(false);
         }
     };
@@ -188,7 +204,7 @@ export const PlanChatModal: React.FC<PlanChatModalProps> = ({
         ]);
 
         if (error) {
-            Alert.alert("Error", "No se pudo enviar: " + error.message);
+            Alert.alert("Error", "No se pudo enviar el mensaje a la base de datos.");
         }
     };
 
@@ -250,7 +266,7 @@ export const PlanChatModal: React.FC<PlanChatModalProps> = ({
         return (
             <View style={[styles.messageContainer, isMe ? styles.myMessage : styles.otherMessage]}>
                 {!isMe && (
-                    <ExpoImage
+                    <Image
                         source={item.miembros?.foto_url ? { uri: item.miembros.foto_url } : { uri: 'https://via.placeholder.com/30' }}
                         style={styles.avatar}
                     />
