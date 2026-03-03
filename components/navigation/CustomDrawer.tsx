@@ -1,5 +1,6 @@
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image as ExpoImage } from 'expo-image';
+import * as WebBrowser from 'expo-web-browser';
 import React, { useState } from 'react';
 import { Animated, Dimensions, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -175,6 +176,14 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
                 <TouchableOpacity style={styles.deleteButton} onPress={deleteAccount}>
                     <MaterialCommunityIcons name="account-remove" size={16} color="#666" />
                     <Text style={styles.deleteText}>Eliminar mi cuenta</Text>
+                </TouchableOpacity>
+
+                {/* Política de Privacidad */}
+                <TouchableOpacity
+                    style={styles.privacyDrawerLink}
+                    onPress={() => WebBrowser.openBrowserAsync('https://iglesia-admin.vercel.app/privacy')}
+                >
+                    <Text style={styles.privacyDrawerText}>Política de Privacidad</Text>
                 </TouchableOpacity>
             </ScrollView>
         </Animated.View>
@@ -392,5 +401,16 @@ const styles = StyleSheet.create({
         fontSize: 11,
         fontWeight: '600',
         marginLeft: 6,
+    },
+    privacyDrawerLink: {
+        marginTop: 15,
+        alignItems: 'center',
+        paddingVertical: 10,
+    },
+    privacyDrawerText: {
+        color: '#444',
+        fontSize: 10,
+        textDecorationLine: 'underline',
+        fontWeight: '600',
     }
 });

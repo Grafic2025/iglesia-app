@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 import React, { useEffect, useRef } from 'react';
 import {
     Alert,
@@ -178,6 +179,14 @@ export const LoginView: React.FC<LoginViewProps> = ({
                                 </TouchableOpacity>
                             </View>
                         )}
+
+                        {/* ===== PRIVACY POLICY LINK ===== */}
+                        <TouchableOpacity
+                            style={styles.privacyLink}
+                            onPress={() => WebBrowser.openBrowserAsync('https://iglesia-admin.vercel.app/privacy')}
+                        >
+                            <Text style={styles.privacyText}>Política de Privacidad</Text>
+                        </TouchableOpacity>
                     </View>
                 </KeyboardAvoidingView>
             </View>
@@ -286,5 +295,16 @@ const styles = StyleSheet.create({
     },
     biometricLabelInactive: {
         color: '#444',
+    },
+    privacyLink: {
+        marginTop: 20,
+        alignSelf: 'center',
+        padding: 5,
+    },
+    privacyText: {
+        color: '#666',
+        fontSize: 11,
+        textDecorationLine: 'underline',
+        fontWeight: '600',
     },
 });
