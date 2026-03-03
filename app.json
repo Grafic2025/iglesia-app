@@ -109,7 +109,8 @@
           "mercadopago",
           "whatsapp",
           "tiktok"
-        ]
+        ],
+        "ITSAppUsesNonExemptEncryption": false
       }
     }
   }
