@@ -60,12 +60,23 @@ export default function RootScreen() {
     refreshData,
   } = useAppContentLogic();
 
-  // 1. Estado de carga inicial
+  const [showSpinner, setShowSpinner] = React.useState(false);
+
+  React.useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => setShowSpinner(true), 250);
+      return () => clearTimeout(timer);
+    } else {
+      setShowSpinner(false);
+    }
+  }, [loading]);
+
+  // 1. Estado de carga inicial (Blindado para ser ultra-rápido)
   if (loading) {
     return (
       <View style={styles.centerOuter}>
         <StatusBar barStyle="light-content" backgroundColor="#000" />
-        <ActivityIndicator size="large" color="#c5ff00" />
+        {showSpinner && <ActivityIndicator size="large" color="#c5ff00" />}
       </View>
     );
   }

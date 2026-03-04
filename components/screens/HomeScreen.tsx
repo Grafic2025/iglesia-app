@@ -7,6 +7,7 @@ import { useApp } from '../../context/AppContext';
 // Modular Components
 import ActionGrid from '../home/ActionGrid';
 import EsencialesSection from '../home/EsencialesSection';
+import { IdsBotFab } from '../home/IdsBotFab';
 import NewsCarousel from '../home/NewsCarousel';
 import RachaCard from '../home/RachaCard';
 import WelcomeHeader from '../home/WelcomeHeader';
@@ -22,7 +23,7 @@ const HomeScreen = ({ navigateTo, setVideoSeleccionado, setModalVideoVisible, se
         refreshData,
         isCurrentlyLive,
         liveVideoUrl,
-        notificationInbox,
+        unreadCount,
     } = useApp();
 
     const [refreshing, setRefreshing] = useState(false);
@@ -97,113 +98,116 @@ const HomeScreen = ({ navigateTo, setVideoSeleccionado, setModalVideoVisible, se
         return list;
     }, [noticiasSupabase, isCurrentlyLive, liveVideoUrl]);
 
-    const unreadCount = notificationInbox?.filter((n: any) => !n.read).length || 0;
+    // unreadCount se obtiene directamente del contexto
 
     if (!nombre) return null;
 
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={{ paddingBottom: 100 }}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#c5ff00" />}
-        >
-            {showToast && (
-                <Animated.View style={[styles.toast, { opacity: toastAnim, transform: [{ translateY: toastAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }] }]}>
-                    <FontAwesome name="check-circle" size={16} color="#000" />
-                    <Text style={styles.toastTxt}>¡Todo al día!</Text>
-                </Animated.View>
-            )}
+        <>
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={{ paddingBottom: 100 }}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#c5ff00" />}
+            >
+                {showToast && (
+                    <Animated.View style={[styles.toast, { opacity: toastAnim, transform: [{ translateY: toastAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }] }]}>
+                        <FontAwesome name="check-circle" size={16} color="#000" />
+                        <Text style={styles.toastTxt}>¡Todo al día!</Text>
+                    </Animated.View>
+                )}
 
-            <WelcomeHeader
-                nombre={nombre}
-                apellido={apellido}
-                fotoUrl={fotoUrl}
-                unreadCount={unreadCount}
-                onNotificationsPress={() => navigateTo('Notificaciones')}
-                onMenuPress={toggleMenu}
-                onProfilePress={() => navigateTo('Mi Perfil')}
-            />
+                <WelcomeHeader
+                    nombre={nombre}
+                    apellido={apellido}
+                    fotoUrl={fotoUrl}
+                    unreadCount={unreadCount}
+                    onNotificationsPress={() => navigateTo('Notificaciones')}
+                    onMenuPress={toggleMenu}
+                    onProfilePress={() => navigateTo('Mi Perfil')}
+                />
 
-            <NewsCarousel
-                data={carouselData}
-                onPress={handleNewsPress}
-            />
+                <NewsCarousel
+                    data={carouselData}
+                    onPress={handleNewsPress}
+                />
 
-            <RachaCard
-                rachaUsuario={rachaUsuario}
-                onRankingPress={() => { cargarRanking(); setShowRanking(true); }}
-                onHistorialPress={() => setShowHistorial(true)}
-            />
+                <RachaCard
+                    rachaUsuario={rachaUsuario}
+                    onRankingPress={() => { cargarRanking(); setShowRanking(true); }}
+                    onHistorialPress={() => setShowHistorial(true)}
+                />
 
-            <EsencialesSection
-                data={serieEsenciales}
-                watchedVideos={watchedVideos}
-                onVideoPress={handleVideoPress}
-                onViewMorePress={() => navigateTo('Mensajes')}
-            />
+                <EsencialesSection
+                    data={serieEsenciales}
+                    watchedVideos={watchedVideos}
+                    onVideoPress={handleVideoPress}
+                    onViewMorePress={() => navigateTo('Mensajes')}
+                />
 
-            <ActionGrid
-                isCurrentlyLive={isCurrentlyLive}
-                liveVideoUrl={liveVideoUrl}
-                navigateTo={(screen) => screen.startsWith('http') ? Linking.openURL(screen) : navigateTo(screen)}
-                onBiblePress={() => Linking.openURL('https://www.bible.com/es')}
-            />
+                <ActionGrid
+                    isCurrentlyLive={isCurrentlyLive}
+                    liveVideoUrl={liveVideoUrl}
+                    navigateTo={(screen) => screen.startsWith('http') ? Linking.openURL(screen) : navigateTo(screen)}
+                    onBiblePress={() => Linking.openURL('https://www.bible.com/es')}
+                />
 
-            <TouchableOpacity style={styles.assistButton} onPress={async () => {
-                const { status } = await requestPermission();
-                if (status === 'granted') setScanning(true);
-                else Alert.alert("Error", "Permiso de cámara denegado");
-            }}>
-                <Text style={styles.assistButtonText}>REGISTRAR ASISTENCIA</Text>
-                <MaterialCommunityIcons name="arrow-right" size={16} color="#000" style={{ marginLeft: 8 }} />
-            </TouchableOpacity>
+                <TouchableOpacity style={styles.assistButton} onPress={async () => {
+                    const { status } = await requestPermission();
+                    if (status === 'granted') setScanning(true);
+                    else Alert.alert("Error", "Permiso de cámara denegado");
+                }}>
+                    <Text style={styles.assistButtonText}>REGISTRAR ASISTENCIA</Text>
+                    <MaterialCommunityIcons name="arrow-right" size={16} color="#000" style={{ marginLeft: 8 }} />
+                </TouchableOpacity>
 
-            <TouchableOpacity style={styles.whatsappChannelBtn} onPress={() => Linking.openURL('https://whatsapp.com/channel/0029VaT0L9rEgGfRVvKIZ534')}>
-                <MaterialCommunityIcons name="whatsapp" size={18} color="white" />
-                <Text style={styles.whatsappChannelTxt}>UNIRME AL CANAL</Text>
-                <MaterialCommunityIcons name="arrow-right" size={16} color="white" style={{ marginLeft: 8 }} />
-            </TouchableOpacity>
+                <TouchableOpacity style={styles.whatsappChannelBtn} onPress={() => Linking.openURL('https://whatsapp.com/channel/0029VaT0L9rEgGfRVvKIZ534')}>
+                    <MaterialCommunityIcons name="whatsapp" size={18} color="white" />
+                    <Text style={styles.whatsappChannelTxt}>UNIRME AL CANAL</Text>
+                    <MaterialCommunityIcons name="arrow-right" size={16} color="white" style={{ marginLeft: 8 }} />
+                </TouchableOpacity>
 
-            {/* ── FOOTER estilo web ── */}
-            <View style={styles.footer}>
-                {/* Info columns */}
-                <View style={styles.footerTop}>
-                    {/* Columna izquierda */}
-                    <View style={styles.footerCol}>
-                        <Text style={styles.footerColTitle}>NAVEGACIÓN</Text>
-                        {['Inicio', 'Grupos', 'Videos', 'Agenda'].map(s => (
-                            <TouchableOpacity key={s} onPress={() => navigateTo(s)}>
-                                <Text style={styles.footerLink}>{s}</Text>
-                            </TouchableOpacity>
-                        ))}
+                {/* ── FOOTER estilo web ── */}
+                <View style={styles.footer}>
+                    {/* Info columns */}
+                    <View style={styles.footerTop}>
+                        {/* Columna izquierda */}
+                        <View style={styles.footerCol}>
+                            <Text style={styles.footerColTitle}>NAVEGACIÓN</Text>
+                            {['Inicio', 'Grupos', 'Videos', 'Agenda'].map(s => (
+                                <TouchableOpacity key={s} onPress={() => navigateTo(s)}>
+                                    <Text style={styles.footerLink}>{s}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        {/* Columna derecha */}
+                        <View style={styles.footerCol}>
+                            <Text style={styles.footerColTitle}>UBICACIÓN & HORARIOS</Text>
+                            <Text style={styles.footerInfoLabel}>DIRECCIÓN:</Text>
+                            <Text style={styles.footerInfoText}>Constituyentes 950, Morón,{`\n`}Buenos Aires, Argentina.</Text>
+                            <Text style={[styles.footerInfoLabel, { marginTop: 12 }]}>PRESENCIAL:</Text>
+                            <Text style={styles.footerInfoText}>Dom. 9, 11 y 20hs</Text>
+                            <Text style={[styles.footerInfoLabel, { marginTop: 4, color: '#c5ff00' }]}>YOUTUBE:</Text>
+                            <Text style={styles.footerInfoText}>Dom. 11hs</Text>
+                            <Text style={[styles.footerInfoText, { marginTop: 8, color: '#888' }]}>hola@iglesiadelsalvador.com</Text>
+                        </View>
                     </View>
 
-                    {/* Columna derecha */}
-                    <View style={styles.footerCol}>
-                        <Text style={styles.footerColTitle}>UBICACIÓN & HORARIOS</Text>
-                        <Text style={styles.footerInfoLabel}>DIRECCIÓN:</Text>
-                        <Text style={styles.footerInfoText}>Constituyentes 950, Morón,{`\n`}Buenos Aires, Argentina.</Text>
-                        <Text style={[styles.footerInfoLabel, { marginTop: 12 }]}>PRESENCIAL:</Text>
-                        <Text style={styles.footerInfoText}>Dom. 9, 11 y 20hs</Text>
-                        <Text style={[styles.footerInfoLabel, { marginTop: 4, color: '#c5ff00' }]}>YOUTUBE:</Text>
-                        <Text style={styles.footerInfoText}>Dom. 11hs</Text>
-                        <Text style={[styles.footerInfoText, { marginTop: 8, color: '#888' }]}>hola@iglesiadelsalvador.com</Text>
+                    {/* Social */}
+                    <View style={styles.footerDivider} />
+                    <View style={styles.socialRow}>
+                        <SocialBtn icon="instagram" color="#E1306C" url="https://instagram.com/iglesiadelsalvador" />
+                        <SocialBtn icon="facebook" color="#4267B2" url="https://facebook.com/iglesiadelsalvador" />
+                        <SocialBtn icon="youtube-play" color="#FF0000" url="https://youtube.com/@iglesiadelsalvador" />
+                        <SocialBtn icon="twitter" color="#1DA1F2" url="https://twitter.com/iglesiadelsalvador" />
                     </View>
-                </View>
 
-                {/* Social */}
-                <View style={styles.footerDivider} />
-                <View style={styles.socialRow}>
-                    <SocialBtn icon="instagram" color="#E1306C" url="https://instagram.com/iglesiadelsalvador" />
-                    <SocialBtn icon="facebook" color="#4267B2" url="https://facebook.com/iglesiadelsalvador" />
-                    <SocialBtn icon="youtube-play" color="#FF0000" url="https://youtube.com/@iglesiadelsalvador" />
-                    <SocialBtn icon="twitter" color="#1DA1F2" url="https://twitter.com/iglesiadelsalvador" />
+                    {/* Copyright */}
+                    <Text style={styles.copyright}>© 2026 IGLESIA DEL SALVADOR. TODOS LOS DERECHOS RESERVADOS.</Text>
                 </View>
-
-                {/* Copyright */}
-                <Text style={styles.copyright}>© 2026 IGLESIA DEL SALVADOR. TODOS LOS DERECHOS RESERVADOS.</Text>
-            </View>
-        </ScrollView>
+            </ScrollView>
+            <IdsBotFab />
+        </>
     );
 };
 

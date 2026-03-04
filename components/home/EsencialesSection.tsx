@@ -66,8 +66,8 @@ const EsencialesSection: React.FC<EsencialesSectionProps> = React.memo(({ data, 
 });
 
 const styles = StyleSheet.create({
-    sectionContainer: { marginBottom: 20 },
-    sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 25, alignItems: 'center', marginBottom: 15 },
+    sectionContainer: { marginBottom: 10 },
+    sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 25, alignItems: 'center', marginBottom: 10 },
     sectionTitle: { fontSize: 15, fontWeight: '900', color: '#fff', letterSpacing: 1 },
     viewMoreBtn: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#0d0d0d', borderWidth: 1, borderColor: '#1a1a1a' },
     viewMoreText: { color: '#888', fontSize: 10, fontWeight: '800' },
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     videoThumbnail: { width: '100%', height: '100%' },
     videoPlayOverlay: { position: 'absolute', bottom: 10, right: 10, width: 34, height: 34, borderRadius: 17, backgroundColor: '#c5ff00', justifyContent: 'center', alignItems: 'center', shadowColor: '#c5ff00', shadowOpacity: 0.3, shadowRadius: 5, elevation: 5 },
     videoWatchedBadge: { position: 'absolute', top: 10, left: 10, width: 22, height: 22, borderRadius: 11, backgroundColor: '#c5ff00', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#000' },
-    videoTitle: { color: '#fff', fontSize: 13, fontWeight: '700', paddingHorizontal: 5, lineHeight: 18 }
+    videoTitle: { color: '#fff', fontSize: 13, fontWeight: '700', paddingHorizontal: 5, lineHeight: 18, marginTop: -8 }
 });
 
 EsencialesSection.displayName = 'EsencialesSection';

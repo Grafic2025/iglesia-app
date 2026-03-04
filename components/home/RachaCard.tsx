@@ -8,7 +8,7 @@ interface RachaCardProps {
     onHistorialPress: () => void;
 }
 
-const RachaCard: React.FC<RachaCardProps> = ({ rachaUsuario, onRankingPress, onHistorialPress }) => {
+const RachaCard: React.FC<RachaCardProps> = React.memo(({ rachaUsuario, onRankingPress, onHistorialPress }) => {
     return (
         <View style={styles.rachaCard}>
             <Text style={styles.rachaTitle}>🔥 TU RACHA DE ASISTENCIA</Text>
@@ -32,12 +32,12 @@ const RachaCard: React.FC<RachaCardProps> = ({ rachaUsuario, onRankingPress, onH
             </View>
         </View>
     );
-};
+});
 
 const styles = StyleSheet.create({
-    rachaCard: { backgroundColor: '#0d0d0d', marginHorizontal: 20, paddingVertical: 10, paddingHorizontal: 15, borderRadius: 28, alignItems: 'center', marginBottom: 15, borderWidth: 1, borderColor: '#1a1a1a' },
-    rachaTitle: { color: '#c5ff00', fontFamily: 'Montserrat_700Bold', fontSize: 13, letterSpacing: 1, marginBottom: 15 },
-    starsContainer: { flexDirection: 'row', marginBottom: 15, gap: 4 },
+    rachaCard: { backgroundColor: '#0d0d0d', marginHorizontal: 20, paddingVertical: 12, paddingHorizontal: 15, borderRadius: 28, alignItems: 'center', marginBottom: 10, marginTop: -5, borderWidth: 1, borderColor: '#1a1a1a' },
+    rachaTitle: { color: '#c5ff00', fontFamily: 'Montserrat_700Bold', fontSize: 13, letterSpacing: 1, marginBottom: 5 },
+    starsContainer: { flexDirection: 'row', marginBottom: 10, gap: 4 },
     dot: { width: 16, height: 16, borderRadius: 8, backgroundColor: '#d1d1d1', position: 'relative' },
     dotActive: { backgroundColor: '#c5ff00', shadowColor: '#c5ff00', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.4, shadowRadius: 3, elevation: 3 },
     dotShine: { position: 'absolute', top: 3, left: 3, width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.7)' },

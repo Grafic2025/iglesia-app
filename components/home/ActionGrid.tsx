@@ -1,7 +1,8 @@
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image as ExpoImage } from 'expo-image';
 import React, { useCallback } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useApp } from '../../context/AppContext';
 
 const BLUR_HASH = 'LEHV6nWB2yk8pyo0adRj00WBnq%M';
 
@@ -55,39 +56,60 @@ interface ActionGridProps {
 }
 
 const ActionGrid: React.FC<ActionGridProps> = React.memo(({ navigateTo, onBiblePress, isCurrentlyLive, liveVideoUrl }) => {
-    // useCallback para que los handlers no se recreen en cada render del padre
-    const goDonaciones = useCallback(() => navigateTo('Quiero Ayudar'), [navigateTo]);
-    const goPedidos = useCallback(() => navigateTo('Necesito Oración'), [navigateTo]);
-    const goGrupos = useCallback(() => navigateTo('Sumarme a un Grupo'), [navigateTo]);
-    const goStream = useCallback(() => navigateTo(liveVideoUrl || 'https://youtube.com/@iglesiadelsalvador'), [navigateTo, liveVideoUrl]);
-    const goAgenda = useCallback(() => navigateTo('Agenda'), [navigateTo]);
-    const goNuevo = useCallback(() => navigateTo('Soy Nuevo'), [navigateTo]);
-    const goBautismos = useCallback(() => navigateTo('Quiero Bautizarme'), [navigateTo]);
-    const goCapacitarme = useCallback(() => navigateTo('Quiero Capacitarme'), [navigateTo]);
-    const goAyuda = useCallback(() => navigateTo('Necesito Ayuda'), [navigateTo]);
+    const { homeActions } = useApp();
+
+    // Acciones por defecto (las que tenías antes)
+    const defaultActions = [
+        { id: '1', titulo: 'Agenda', icono: 'calendar', imagen_url: 'https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=400', pantalla: 'Agenda', es_mci: false },
+        { id: '2', titulo: 'Biblia', icono: 'book', imagen_url: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Biblia.jpg', pantalla: 'https://www.bible.com/es', es_mci: false },
+        { id: '3', titulo: 'Quiero Ayudar', icono: 'heart', imagen_url: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400', pantalla: 'Quiero Ayudar', es_mci: false },
+        { id: '4', titulo: 'Necesito Ayuda', icono: 'hand-heart', imagen_url: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Ayuda.jpg', pantalla: 'Necesito Ayuda', es_mci: true },
+        { id: '5', titulo: 'Quiero Bautizarme', icono: 'tint', imagen_url: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Bautismos.jpg', pantalla: 'Quiero Bautizarme', es_mci: false },
+        { id: '6', titulo: 'Quiero Capacitarme', icono: 'graduation-cap', imagen_url: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Capacitarme.jpg', pantalla: 'Quiero Capacitarme', es_mci: false },
+        { id: '7', titulo: 'Soy Nuevo', icono: 'account-plus', imagen_url: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Nuevo.jpg', pantalla: 'Soy Nuevo', es_mci: true },
+        { id: '8', titulo: 'Necesito Oración', icono: 'hands-pray', imagen_url: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Oracion.jpg', pantalla: 'Necesito Oración', es_mci: true },
+        { id: '9', titulo: 'Sumarme a un Grupo', icono: 'users', imagen_url: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Grupos.jpg', pantalla: 'Sumarme a un Grupo', es_mci: false },
+        { id: '10', titulo: 'Reunión en Vivo', icono: 'youtube-play', imagen_url: 'https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Vivo.jpg', pantalla: liveVideoUrl || 'https://youtube.com/@iglesiadelsalvador', es_mci: false },
+    ];
+
+    const actionsToRender = homeActions && homeActions.length > 0 ? homeActions : defaultActions;
+
+    // Agrupamos de a 2 para las filas
+    const rows = [];
+    for (let i = 0; i < actionsToRender.length; i += 2) {
+        rows.push(actionsToRender.slice(i, i + 2));
+    }
+
+    const handlePress = useCallback((screen: string) => {
+        if (screen === 'Biblia') {
+            onBiblePress();
+        } else if (screen === 'Reunión en Vivo') {
+            navigateTo(liveVideoUrl || 'https://youtube.com/@iglesiadelsalvador');
+        } else if (screen.startsWith('http')) {
+            Linking.openURL(screen);
+        } else {
+            navigateTo(screen);
+        }
+    }, [navigateTo, onBiblePress, liveVideoUrl]);
 
     return (
         <View style={styles.grid}>
-            <View style={styles.row}>
-                <ActionCard title="Agenda" icon="calendar" image="https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=400" onPress={goAgenda} />
-                <ActionCard title="Biblia" icon="book" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Biblia.jpg" onPress={onBiblePress} />
-            </View>
-            <View style={styles.row}>
-                <ActionCard title="Quiero Ayudar" icon="heart" image="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400" onPress={goDonaciones} />
-                <ActionCard title="Necesito Ayuda" icon="hand-heart" isMCI image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Ayuda.jpg" onPress={goAyuda} />
-            </View>
-            <View style={styles.row}>
-                <ActionCard title="Quiero Bautizarme" icon="tint" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Bautismos.jpg" onPress={goBautismos} />
-                <ActionCard title="Quiero Capacitarme" icon="graduation-cap" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Capacitarme.jpg" onPress={goCapacitarme} />
-            </View>
-            <View style={styles.row}>
-                <ActionCard title="Soy Nuevo" icon="account-plus" isMCI image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Nuevo.jpg" onPress={goNuevo} />
-                <ActionCard title="Necesito Oración" icon="hands-pray" isMCI image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Oracion.jpg" onPress={goPedidos} />
-            </View>
-            <View style={styles.row}>
-                <ActionCard title="Sumarme a un Grupo" icon="users" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Grupos.jpg" onPress={goGrupos} />
-                <ActionCard title="Reunión en Vivo" icon="youtube-play" image="https://acvxjhecpgmauqqzmjik.supabase.co/storage/v1/object/public/imagenes-iglesia/Vivo.jpg" onPress={goStream} />
-            </View>
+            {rows.map((row, rowIndex) => (
+                <View key={`row-${rowIndex}`} style={styles.row}>
+                    {row.map((action: any) => (
+                        <ActionCard
+                            key={action.id}
+                            title={action.titulo}
+                            icon={action.icono}
+                            image={action.imagen_url}
+                            isMCI={action.es_mci}
+                            onPress={() => handlePress(action.pantalla)}
+                        />
+                    ))}
+                    {/* Placeholder si la fila tiene uno solo */}
+                    {row.length === 1 && <View style={{ width: '48%' }} />}
+                </View>
+            ))}
         </View>
     );
 });
@@ -104,13 +126,14 @@ const styles = StyleSheet.create({
         fontFamily: 'Montserrat_700Bold',
         color: '#fff',
         fontSize: 13,
-        marginTop: 10,
+        paddingBottom: 5,
         textAlign: 'center',
         letterSpacing: 0.2,
         textShadowColor: 'rgba(0,0,0,1)',
         textShadowOffset: { width: 1, height: 1 },
         textShadowRadius: 3
     },
+    videoTitle: { color: '#fff', fontSize: 13, fontWeight: '700', paddingHorizontal: 5, lineHeight: 18, marginBottom: 5 },
     iconContainer: {
         height: 40,
         justifyContent: 'center',

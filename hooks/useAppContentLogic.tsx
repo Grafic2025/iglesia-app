@@ -3,7 +3,7 @@ import { useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Animated, Dimensions } from 'react-native';
 
 import { useApp } from '../context/AppContext';
@@ -22,6 +22,10 @@ import ProfileScreen from '../components/screens/ProfileScreen';
 import ServidoresScreen from '../components/screens/ServidoresScreen';
 import SupportScreen from '../components/screens/SupportScreen';
 import VideosScreen from '../components/screens/VideosScreen';
+
+// Memoizamos HomeScreen para que no se re-renderice si sus props no cambian.
+// Esto es CRÍTICO para el rendimiento ya que HomeScreen es el componente más pesado.
+const MemoizedHomeScreen = React.memo(HomeScreen);
 
 const { width } = Dimensions.get('window');
 
@@ -301,7 +305,7 @@ export function useAppContentLogic() {
     switch (currentScreen) {
       case 'Inicio':
         return (
-          <HomeScreen
+          <MemoizedHomeScreen
             navigateTo={navigateTo}
             setVideoSeleccionado={setVideoSeleccionado}
             setModalVideoVisible={setModalVideoVisible}

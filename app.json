@@ -2,11 +2,11 @@
   "expo": {
     "name": "Iglesia del Salvador",
     "slug": "iglesia-app",
-    "version": "1.1.7",
+    "version": "1.1.8",
     "scheme": "iglesia-del-salvador",
     "icon": "./assets/images/icon.png",
     "splash": {
-      "image": "./assets/images/LogoWhite.png",
+      "image": "./assets/images/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFFFFF"
     },
@@ -17,10 +17,10 @@
     },
     "android": {
       "package": "com.grafic2026.iglesiaapp",
-      "versionCode": 7,
+      "versionCode": 8,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#FFFFFF"
       },
       "permissions": [
@@ -71,7 +71,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.grafic2026.iglesiaapp",
-      "buildNumber": "7",
+      "buildNumber": "8",
       "supportsTablet": true,
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [

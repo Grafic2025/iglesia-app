@@ -14,7 +14,7 @@ interface WelcomeHeaderProps {
   onProfilePress?: () => void;
 }
 
-const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
+const WelcomeHeader: React.FC<WelcomeHeaderProps> = React.memo(({
   nombre,
   apellido,
   fotoUrl,
@@ -40,7 +40,7 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
 
         {/* Church Title */}
         <View style={styles.titleContainer}>
-          <Text style={styles.churchTitle}>IGLESIA DEL SALVADO</Text>
+          <Text style={styles.churchTitle}>IGLESIA DEL SALVADOR</Text>
           <View style={styles.titleUnderline} />
         </View>
 
@@ -83,7 +83,7 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = ({
       </View>
     </View>
   );
-};
+});
 
 export default WelcomeHeader;
 
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     paddingHorizontal: 20,
     backgroundColor: '#000',
-    paddingBottom: 10,
+    paddingBottom: 0,
   },
 
   // Title Row: Menu | Title | Profile
@@ -102,8 +102,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
-    height: 50,
+    marginBottom: 5,
+    height: 45,
   },
 
   titleContainer: {
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 5,
   },
 
   greetingContainer: {

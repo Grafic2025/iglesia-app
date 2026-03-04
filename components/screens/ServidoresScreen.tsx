@@ -416,6 +416,8 @@ const ServidoresScreen = ({ navigateTo }: any) => {
                         memberId={memberId || ''}
                         planTitle={plan.notas_generales || 'Plan de Culto'}
                         planDate={new Date(plan.fecha + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
+                        planTime={plan.horario ? plan.horario.split(',').map((h: any) => h.trim().replace(/HS/gi, '').trim()).sort((a: any, b: any) => { const [ha, ma] = a.split(':').map(Number); const [hb, mb] = b.split(':').map(Number); return (ha * 60 + (ma || 0)) - (hb * 60 + (mb || 0)); }).join(' y ') : '...'}
+                        equipoIds={plan.equipo_ids || []}
                     />
                 </Modal>
             )}

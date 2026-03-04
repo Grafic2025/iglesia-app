@@ -32,6 +32,7 @@ export interface AppContextType {
     unreadCount: number;
     markNotificationRead: (id: string) => void;
     markAllRead: () => void;
+    homeActions: any[];
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -60,27 +61,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [esServidor, setEsServidor] = useState(false);
     const [esAdmin, setEsAdmin] = useState(false);
     const [notificationInbox, setNotificationInbox] = useState<any[]>([]);
+    const [homeActions, setHomeActions] = useState<any[]>([]);
 
     /**
-     * Carga la sesión del usuario desde el almacenamiento persistente (SecureStore y AsyncStorage).
-     * Recupera el ID del miembro, nombre y apellido para rehidratar el estado de inicio de sesión.
+     * Carga la sesión del usuario y la caché de forma ultra-rápida usando Promise.all.
      */
     const loadSession = useCallback(async () => {
         try {
-            const mid = await SecureStore.getItemAsync('memberId');
-            const savedNombre = await AsyncStorage.getItem('nombre');
-            const savedApellido = await AsyncStorage.getItem('apellido');
+            // Buscamos todo en paralelo para ganar velocidad de arranque
+            const [mid, savedNombre, savedApellido, cachedNews, cachedInbox, cachedActions] = await Promise.all([
+                SecureStore.getItemAsync('memberId'),
+                AsyncStorage.getItem('nombre'),
+                AsyncStorage.getItem('apellido'),
+                AsyncStorage.getItem('cache_noticias'),
+                AsyncStorage.getItem('notificationInbox'),
+                AsyncStorage.getItem('cache_home_actions')
+            ]);
 
+            // Restaurar sesión
             if (savedNombre) setNombre(savedNombre);
             if (savedApellido) setApellido(savedApellido);
-
             if (mid && savedNombre) {
                 setMemberId(mid);
                 setIsLoggedIn(true);
             }
+
+            // Restaurar caché de noticias e inbox inmediatamente
+            if (cachedNews) {
+                const parsed = JSON.parse(cachedNews);
+                if (Array.isArray(parsed)) setNoticiasSupabase(parsed);
+            }
+            if (cachedInbox) {
+                const parsed = JSON.parse(cachedInbox);
+                if (Array.isArray(parsed)) setNotificationInbox(parsed);
+            }
+            if (cachedActions) {
+                const parsed = JSON.parse(cachedActions);
+                if (Array.isArray(parsed)) setHomeActions(parsed);
+            }
+
         } catch (e) {
-            console.error("Error loading session:", e);
+            console.error("Error ultra-fast loading session:", e);
         } finally {
+            // Liberamos el círculo amarillo lo antes posible
             setLoading(false);
         }
     }, []);
@@ -339,12 +362,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             const hace30Dias = new Date();
             hace30Dias.setDate(hace30Dias.getDate() - 30);
 
-            const [newsRes, memberRes, asistRes] = await Promise.all([
+            const [newsRes, memberRes, asistRes, actionsRes] = await Promise.all([
                 supabase.from('noticias').select('*').eq('activa', true).order('created_at', { ascending: false }),
                 supabase.from('miembros').select('*').eq('id', memberId).single(),
                 supabase.from('asistencias').select('*').eq('miembro_id', memberId)
                     .gte('fecha', hace30Dias.toISOString().split('T')[0])
                     .order('fecha', { ascending: false }),
+                supabase.from('configuracion').select('*').eq('clave', 'home_actions').maybeSingle(),
             ]);
 
             if (newsRes.data) {
@@ -361,6 +385,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 setRachaUsuario(asistRes.data.length);
                 setAsistenciasDetalle(asistRes.data);
             }
+            if (actionsRes?.data?.valor) {
+                setHomeActions(actionsRes.data.valor);
+                AsyncStorage.setItem('cache_home_actions', JSON.stringify(actionsRes.data.valor));
+            }
         } catch (e) { console.error('Error refreshing Supabase:', e); }
     }, [memberId]);
 
@@ -371,21 +399,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, [refreshSupabaseOnly, fetchYoutubeData]);
 
     useEffect(() => {
-        const loadCache = async () => {
-            try {
-                const cachedNews = await AsyncStorage.getItem('cache_noticias');
-                if (cachedNews) {
-                    const parsedNews = JSON.parse(cachedNews);
-                    if (Array.isArray(parsedNews)) setNoticiasSupabase(parsedNews);
-                }
-                const cachedInbox = await AsyncStorage.getItem('notificationInbox');
-                if (cachedInbox) {
-                    const parsedInbox = JSON.parse(cachedInbox);
-                    if (Array.isArray(parsedInbox)) setNotificationInbox(parsedInbox);
-                }
-            } catch (e) { console.log(e); }
-        };
-        loadCache();
         loadSession();
 
         // Real-time subscriptions — solo Supabase, no YouTube
@@ -422,7 +435,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             noticiasSupabase, serieEsenciales, rachaUsuario, asistenciasDetalle,
             currentScreen, setCurrentScreen, logout, deleteAccount, login, loginWithBiometrics, refreshData,
             isCurrentlyLive, liveVideoUrl, esServidor, esAdmin, notificationInbox, addNotificationToInbox,
-            unreadCount, markNotificationRead, markAllRead
+            unreadCount, markNotificationRead, markAllRead,
+            homeActions
         }}>
             {children}
         </AppContext.Provider>

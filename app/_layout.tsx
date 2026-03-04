@@ -1,14 +1,7 @@
+import { Inter_400Regular } from '@expo-google-fonts/inter';
 import {
-  Inter_300Light,
-  Inter_400Regular,
-  Inter_600SemiBold
-} from '@expo-google-fonts/inter';
-import {
-  Montserrat_200ExtraLight,
-  Montserrat_300Light,
-  Montserrat_400Regular,
+  Montserrat_500Medium,
   Montserrat_700Bold,
-  Montserrat_800ExtraBold,
   Montserrat_900Black,
   useFonts
 } from '@expo-google-fonts/montserrat';
@@ -20,7 +13,7 @@ import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppProvider } from '../context/AppContext';
 
-// Configuración obligatoria para que las notificaciones se vean SIEMPRE, incluso con la app abierta
+// Configuración obligatoria para que las notificaciones se vean SIEMPRE
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -34,19 +27,20 @@ Notifications.setNotificationHandler({
 const queryClient = new QueryClient();
 
 export default function Layout() {
-  const [fontsLoaded] = useFonts({
-    Montserrat_200ExtraLight,
-    Montserrat_300Light,
-    Montserrat_400Regular,
+  const [fontsLoaded, fontError] = useFonts({
+    Montserrat_500Medium,
     Montserrat_700Bold,
-    Montserrat_800ExtraBold,
     Montserrat_900Black,
-    Inter_300Light,
     Inter_400Regular,
-    Inter_600SemiBold,
   });
 
-  if (!fontsLoaded) {
+  if (fontError) {
+    console.error("[LAYOUT] Error cargando fuentes:", fontError);
+  }
+
+  // Mientras cargan las fuentes (que ahora son pocas y pesan poco)
+  // mostramos un fondo negro para no molestar la vista.
+  if (!fontsLoaded && !fontError) {
     return <View style={{ flex: 1, backgroundColor: '#000' }} />;
   }
 

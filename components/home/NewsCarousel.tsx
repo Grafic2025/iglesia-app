@@ -12,7 +12,7 @@ interface NewsCarouselProps {
     onPress: (item: any) => void;
 }
 
-const NewsCarousel: React.FC<NewsCarouselProps> = ({ data, onPress }) => {
+const NewsCarousel: React.FC<NewsCarouselProps> = React.memo(({ data, onPress }) => {
     const [activeSlide, setActiveSlide] = useState(0);
     const flatListRef = useRef<FlatList>(null);
     const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -25,7 +25,7 @@ const NewsCarousel: React.FC<NewsCarouselProps> = ({ data, onPress }) => {
                 flatListRef.current?.scrollToIndex({ index: next, animated: true });
                 return next;
             });
-        }, 5000);
+        }, 4000);
         return () => { if (autoPlayRef.current) clearInterval(autoPlayRef.current); };
     }, [data.length]);
 
@@ -95,26 +95,26 @@ const NewsCarousel: React.FC<NewsCarouselProps> = ({ data, onPress }) => {
             )}
         </View>
     );
-};
+});
 
 const styles = StyleSheet.create({
-    carouselContainer: { marginBottom: 15 },
+    carouselContainer: { marginBottom: -10, position: 'relative' },
     slide: { width: width, paddingHorizontal: 20 },
-    slideInner: { height: 265, borderRadius: 30, overflow: 'hidden', backgroundColor: '#111' },
+    slideInner: { height: 260, borderRadius: 30, overflow: 'hidden', backgroundColor: '#111' },
     slideImage: { width: '100%', height: '100%' },
-    slideInfoContainer: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, paddingTop: 15 },
+    slideInfoContainer: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 50 },
     infoTopRow: { marginBottom: 10 },
     videoIndicator: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1.5, borderColor: '#c5ff00', shadowColor: '#c5ff00', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.2, shadowRadius: 3, elevation: 4 },
     indicatorPlayCircle: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#c5ff00', justifyContent: 'center', alignItems: 'center', marginRight: 10, shadowColor: '#c5ff00', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.4, shadowRadius: 3, elevation: 6 },
     videoIndicatorText: { fontFamily: 'Montserrat_900Black', color: '#c5ff00', fontSize: 11, letterSpacing: 1 },
-    slideTitleText: { fontFamily: 'Montserrat_900Black', color: '#fff', fontSize: 21, letterSpacing: -0.5, textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 6 },
+    slideTitleText: { fontFamily: 'Montserrat_900Black', color: '#fff', fontSize: 21, letterSpacing: -0.5, textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 6, marginBottom: 10 },
     newsLiveTag: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start' },
     livePulse: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#c5ff00', marginRight: 8, shadowColor: '#c5ff00', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 4, elevation: 8 },
     newsLiveText: { fontFamily: 'Montserrat_900Black', color: '#c5ff00', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase' },
-    dotRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 15 },
-    dot: { height: 6, borderRadius: 3, marginHorizontal: 3 },
-    dotActive: { width: 22, backgroundColor: '#c5ff00', shadowColor: '#c5ff00', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.4, shadowRadius: 4, elevation: 5 },
-    dotInactive: { width: 6, backgroundColor: '#333' }
+    dotRow: { flexDirection: 'row', justifyContent: 'center', position: 'absolute', bottom: 12, left: 0, right: 0 },
+    dot: { height: 5, borderRadius: 3, marginHorizontal: 2.5 },
+    dotActive: { width: 18, backgroundColor: '#c5ff00', shadowColor: '#c5ff00', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.4, shadowRadius: 4, elevation: 5 },
+    dotInactive: { width: 5, backgroundColor: 'rgba(255,255,255,0.3)' }
 });
 
 export default NewsCarousel;
