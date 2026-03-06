@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as LocalAuthentication from 'expo-local-authentication';
+import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useState } from 'react';
 
 export type BiometricType = 'fingerprint' | 'facial' | 'none';
@@ -30,10 +31,12 @@ export function useBiometricAuth(): UseBiometricAuthReturn {
     }, []);
 
     const checkBiometrics = async () => {
+        console.log('[BIO] Verificando compatibilidad de biometría...');
         try {
             // Verificar soporte de hardware
             const compatible = await LocalAuthentication.hasHardwareAsync();
             if (!compatible) {
+                console.warn('[BIO] El dispositivo no tiene hardware biométrico.');
                 setState(s => ({ ...s, isAvailable: false }));
                 return;
             }
@@ -41,6 +44,7 @@ export function useBiometricAuth(): UseBiometricAuthReturn {
             // Verificar si hay biometría registrada en el dispositivo
             const enrolled = await LocalAuthentication.isEnrolledAsync();
             if (!enrolled) {
+                console.warn('[BIO] El usuario no tiene biometría configurada en el sistema.');
                 setState(s => ({ ...s, isAvailable: false }));
                 return;
             }
@@ -55,9 +59,14 @@ export function useBiometricAuth(): UseBiometricAuthReturn {
                 biometricType = 'fingerprint';
             }
 
-            // Verificar si hay una sesión anterior guardada
-            const savedNombre = await AsyncStorage.getItem('nombre');
-            const hasSavedSession = !!savedNombre;
+            // Verificar si hay una sesión anterior guardada de forma segura
+            const [savedNombre, biometricId] = await Promise.all([
+                AsyncStorage.getItem('nombre'),
+                SecureStore.getItemAsync('biometricMemberId')
+            ]);
+
+            const hasSavedSession = !!savedNombre && !!biometricId;
+            console.log(`[BIO] Disponible: ${biometricType}, Sesión guardada: ${hasSavedSession ? 'SÍ' : 'NO'}`);
 
             setState({
                 isAvailable: biometricType !== 'none',
@@ -65,7 +74,7 @@ export function useBiometricAuth(): UseBiometricAuthReturn {
                 hasSavedSession,
             });
         } catch (e) {
-            console.error('Error checking biometrics:', e);
+            console.error('[BIO] ERROR al verificar biometría:', e);
         }
     };
 
@@ -74,6 +83,7 @@ export function useBiometricAuth(): UseBiometricAuthReturn {
      * Retorna true si el usuario fue autenticado exitosamente.
      */
     const authenticate = useCallback(async (): Promise<boolean> => {
+        console.log('[BIO] Lanzando prompt de autenticación...');
         try {
             const result = await LocalAuthentication.authenticateAsync({
                 promptMessage: 'Verificá tu identidad',
@@ -81,9 +91,10 @@ export function useBiometricAuth(): UseBiometricAuthReturn {
                 fallbackLabel: 'Usar contraseña',
                 disableDeviceFallback: false,
             });
+            console.log(`[BIO] Resultado del sistema: ${result.success ? 'EXITOSO' : 'FALLIDO'}`);
             return result.success;
         } catch (e) {
-            console.error('Biometric auth error:', e);
+            console.error('[BIO] ERROR fatal durante el prompt:', e);
             return false;
         }
     }, []);

@@ -1,40 +1,52 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef } from 'react';
-import { Animated } from 'react-native';
+import { Animated, DimensionValue, StyleSheet, View } from 'react-native';
 
-const Skeleton = ({ width, height, borderRadius = 8, style }: any) => {
-    const opacity = useRef(new Animated.Value(0.3)).current;
+interface SkeletonProps {
+    width?: DimensionValue;
+    height?: DimensionValue;
+    borderRadius?: number;
+    style?: any;
+}
+
+export const Skeleton: React.FC<SkeletonProps> = ({ width = '100%', height = 20, borderRadius = 8, style }) => {
+    const shimmerAnim = useRef(new Animated.Value(-1)).current;
 
     useEffect(() => {
-        Animated.loop(
-            Animated.sequence([
-                Animated.timing(opacity, {
-                    toValue: 0.7,
-                    duration: 800,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(opacity, {
-                    toValue: 0.3,
-                    duration: 800,
-                    useNativeDriver: true,
-                }),
-            ])
-        ).start();
-    }, [opacity]);
+        const startShimmer = () => {
+            shimmerAnim.setValue(-1);
+            Animated.timing(shimmerAnim, {
+                toValue: 1,
+                duration: 1500,
+                useNativeDriver: true,
+            }).start(() => startShimmer());
+        };
+
+        startShimmer();
+    }, [shimmerAnim]);
+
+    const translateX = shimmerAnim.interpolate({
+        inputRange: [-1, 1],
+        outputRange: [-300, 300],
+    });
 
     return (
-        <Animated.View
-            style={[
-                {
-                    width,
-                    height,
-                    backgroundColor: '#222',
-                    borderRadius,
-                    opacity,
-                },
-                style,
-            ]}
-        />
+        <View style={[styles.skeleton, { width, height, borderRadius }, style]}>
+            <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ translateX }] }]}>
+                <LinearGradient
+                    colors={['transparent', 'rgba(255,255,255,0.05)', 'transparent']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={StyleSheet.absoluteFill}
+                />
+            </Animated.View>
+        </View>
     );
 };
 
-export default Skeleton;
+const styles = StyleSheet.create({
+    skeleton: {
+        backgroundColor: '#111',
+        overflow: 'hidden',
+    },
+});

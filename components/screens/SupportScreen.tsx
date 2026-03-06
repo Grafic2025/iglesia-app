@@ -3,10 +3,12 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { Alert, Animated, Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../../context/AppContext';
 import { supabase } from '../../lib/supabase';
 
 const SupportScreen = ({ navigateTo, type }: { navigateTo: any, type: string }) => {
+    const insets = useSafeAreaInsets();
     const { memberId } = useApp();
     const [field1, setField1] = useState('');
     const [field2, setField2] = useState('');
@@ -55,8 +57,14 @@ const SupportScreen = ({ navigateTo, type }: { navigateTo: any, type: string }) 
     };
 
     return (
-        <View style={styles.mainContainer}>
-            <View style={styles.headerRow}>
+        <View style={styles.mainWrapper}>
+            <LinearGradient colors={['#050B25', '#020205']} style={StyleSheet.absoluteFill} />
+
+            {/* Mesh gradient effects */}
+            <View style={{ position: 'absolute', top: -50, right: -50, width: 300, height: 300, borderRadius: 150, backgroundColor: 'rgba(37, 99, 235, 0.08)' }} />
+            <View style={{ position: 'absolute', bottom: 100, left: -100, width: 400, height: 400, borderRadius: 200, backgroundColor: 'rgba(147, 51, 234, 0.06)' }} />
+
+            <View style={[styles.headerRow, { paddingTop: Math.max(insets.top, 16) }]}>
                 <TouchableOpacity onPress={() => navigateTo('Inicio')} style={styles.backButton}>
                     <MaterialCommunityIcons name="chevron-left" size={28} color="#c5ff00" />
                     <Text style={styles.backText}>VOLVER</Text>
@@ -269,15 +277,33 @@ const SupportScreen = ({ navigateTo, type }: { navigateTo: any, type: string }) 
 };
 
 const styles = StyleSheet.create({
-    mainContainer: { flex: 1, backgroundColor: '#000' },
+    mainWrapper: { flex: 1, backgroundColor: '#020205' },
     container: { flex: 1 },
     headerRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, marginBottom: 20 },
-    backButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.8)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 22, borderWidth: 1, borderColor: '#333' },
-    backText: { color: '#c5ff00', fontSize: 11, fontWeight: '900', letterSpacing: 1, marginLeft: 5 },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 22,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.08)'
+    },
+    backText: { color: '#c5ff00', fontSize: 10, fontFamily: 'Montserrat_900Black', letterSpacing: 1.5, marginLeft: 8 },
     headerSub: { color: '#c5ff00', fontSize: 10, fontWeight: '900', letterSpacing: 2 },
     headerTitle: { color: '#fff', fontSize: 24, fontWeight: '900', letterSpacing: -1 },
 
-    infoCard: { padding: 25, borderRadius: 32, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', marginBottom: 30, alignItems: 'center' },
+    infoCard: {
+        paddingHorizontal: 25,
+        paddingVertical: 35,
+        borderRadius: 36,
+        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.06)',
+        marginBottom: 30,
+        alignItems: 'center'
+    },
     infoText: { color: '#bbb', fontSize: 15, lineHeight: 24, textAlign: 'center', marginTop: 15 },
 
     mpActionCard: { borderRadius: 28, overflow: 'hidden', marginBottom: 30 },
@@ -287,22 +313,34 @@ const styles = StyleSheet.create({
     mpSubText: { color: 'rgba(255,255,255,0.8)', fontSize: 11, fontWeight: '700' },
 
     bankSection: { marginTop: 10 },
-    sectionLabel: { color: '#888', fontSize: 11, fontWeight: '900', letterSpacing: 1.5, marginLeft: 5, marginBottom: 15 },
-    bankCard: { padding: 25, borderRadius: 32, backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+    sectionLabel: { color: '#aaa', fontSize: 11, fontWeight: '900', letterSpacing: 1.5, marginLeft: 5, marginBottom: 15 },
+    bankCard: {
+        padding: 30,
+        borderRadius: 36,
+        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)'
+    },
     bankRow: { marginBottom: 20 },
-    bankKey: { color: '#888', fontSize: 10, fontWeight: '900', letterSpacing: 1 },
+    bankKey: { color: '#aaa', fontSize: 10, fontWeight: '900', letterSpacing: 1 },
     bankValue: { color: '#fff', fontSize: 16, fontWeight: '800', marginTop: 4 },
     bankFooter: { marginTop: 10, paddingTop: 20, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' },
-    bankFooterText: { color: '#888', fontSize: 11, fontWeight: '900', textAlign: 'center' },
+    bankFooterText: { color: '#aaa', fontSize: 11, fontWeight: '900', textAlign: 'center' },
 
     formContainer: { marginTop: 10 },
-    formCard: { padding: 30, borderRadius: 32, backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+    formCard: {
+        padding: 30,
+        borderRadius: 36,
+        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.08)'
+    },
     inputLabel: { color: '#fff', fontSize: 10, fontWeight: '900', letterSpacing: 1, marginBottom: 10, marginLeft: 5 },
     input: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 16, height: 55, paddingHorizontal: 20, color: '#fff', fontSize: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', marginBottom: 25 },
     radioGroup: { flexDirection: 'row', gap: 10, marginBottom: 25 },
     radioBtn: { flex: 1, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 16, height: 55, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
     radioBtnActive: { backgroundColor: '#c5ff00', borderColor: '#c5ff00' },
-    radioText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+    radioText: { color: '#888', fontSize: 14, fontWeight: '700' },
     radioTextActive: { color: '#000', fontWeight: '900' },
     mainSubmitBtn: { backgroundColor: '#c5ff00', height: 65, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginTop: 10, shadowColor: '#c5ff00', shadowOpacity: 0.2, shadowRadius: 15, elevation: 10 },
     mainSubmitText: { color: '#000', fontSize: 14, fontWeight: '900', letterSpacing: 1 },

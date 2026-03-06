@@ -1,4 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
@@ -121,6 +123,8 @@ export const IdsBotFab: React.FC = () => {
                         style={styles.chatContainer}
                         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
                     >
+                        <LinearGradient colors={['#050B25', '#020205']} style={StyleSheet.absoluteFill} />
+                        <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
                         {/* HEADER AZUL PREMIUM */}
                         <View style={styles.header}>
                             <View style={styles.headerTitleRow}>
@@ -208,7 +212,7 @@ export const IdsBotFab: React.FC = () => {
 const styles = StyleSheet.create({
     fabContainer: {
         position: 'absolute',
-        bottom: 30,
+        bottom: 85,
         right: 30,
         zIndex: 9999,
     },
@@ -234,10 +238,12 @@ const styles = StyleSheet.create({
     },
     chatContainer: {
         height: height * 0.85,
-        backgroundColor: '#0a0a0a',
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
+        backgroundColor: '#020205',
+        borderTopLeftRadius: 36,
+        borderTopRightRadius: 36,
         overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.08)'
     },
     header: {
         backgroundColor: '#2563EB',
@@ -311,10 +317,10 @@ const styles = StyleSheet.create({
         borderRadius: 18,
     },
     botBubble: {
-        backgroundColor: '#171717',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
         borderBottomLeftRadius: 4,
         borderWidth: 1,
-        borderColor: '#262626',
+        borderColor: 'rgba(255, 255, 255, 0.08)',
     },
     userBubble: {
         backgroundColor: '#2563EB',
@@ -328,18 +334,20 @@ const styles = StyleSheet.create({
     },
     inputArea: {
         padding: 20,
-        backgroundColor: '#0a0a0a',
+        backgroundColor: 'transparent',
         borderTopWidth: 1,
-        borderTopColor: '#1a1a1a',
+        borderTopColor: 'rgba(255,255,255,0.05)',
     },
     inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#171717',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
         borderRadius: 16,
         paddingHorizontal: 16,
         paddingVertical: 8,
         gap: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.08)'
     },
     textInput: {
         flex: 1,
@@ -351,7 +359,7 @@ const styles = StyleSheet.create({
     },
     poweredBy: {
         textAlign: 'center',
-        color: '#444',
+        color: '#666',
         fontFamily: 'Montserrat_700Bold',
         fontSize: 9,
         marginTop: 15,

@@ -118,26 +118,35 @@ const styles = StyleSheet.create({
     grid: { padding: 10 },
     row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
     card: { width: '48%', height: 100 },
-    cardImage: { width: '100%', height: '100%', borderRadius: 24, overflow: 'hidden', backgroundColor: '#000' },
+    cardImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 28,
+        overflow: 'hidden',
+        backgroundColor: '#000',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.08)'
+    },
     cardImageFill: { ...StyleSheet.absoluteFillObject },
     solidCard: { justifyContent: 'center', alignItems: 'center' },
-    cardOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 10 },
+    cardOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center', padding: 10 },
     cardTitle: {
-        fontFamily: 'Montserrat_700Bold',
+        fontFamily: 'Montserrat_900Black',
         color: '#fff',
-        fontSize: 13,
-        paddingBottom: 5,
+        fontSize: 10,
         textAlign: 'center',
-        letterSpacing: 0.2,
-        textShadowColor: 'rgba(0,0,0,1)',
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 3
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+        textShadowColor: 'rgba(0,0,0,0.85)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 6
     },
     videoTitle: { color: '#fff', fontSize: 13, fontWeight: '700', paddingHorizontal: 5, lineHeight: 18, marginBottom: 5 },
     iconContainer: {
-        height: 40,
+        height: 38,
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        marginBottom: 4
     },
     iconGlow: {
         shadowColor: '#c5ff00',

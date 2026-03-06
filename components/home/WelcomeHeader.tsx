@@ -3,6 +3,7 @@ import { Image as ExpoImage } from 'expo-image';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useApp } from '../../context/AppContext';
 
 interface WelcomeHeaderProps {
   nombre: string;
@@ -24,9 +25,13 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = React.memo(({
   onProfilePress,
 }) => {
   const insets = useSafeAreaInsets();
+  const { isOffline } = useApp();
 
   return (
     <View style={[styles.headerContainer, { paddingTop: Math.max(insets.top, 16) }]}>
+      {/* Glow Effect behind header */}
+      <View style={{ position: 'absolute', top: -30, left: '25%', width: 200, height: 100, borderRadius: 50, backgroundColor: 'rgba(37, 99, 235, 0.08)', zIndex: -1 }} />
+
       {/* ============ TOP BAR: MENU | TITLE | PROFILE/PHOTO ============ */}
       <View style={styles.titleRow}>
         {/* Menu Button */}
@@ -62,7 +67,14 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = React.memo(({
       <View style={styles.bottomRow}>
         <View style={styles.greetingContainer}>
           <Text style={styles.greetingText}>Hola,</Text>
-          <Text style={styles.userNameText}>{nombre} 👋</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={styles.userNameText}>{nombre} 👋</Text>
+            {isOffline && (
+              <View style={styles.offlineBadge}>
+                <Text style={styles.offlineText}>OFFLINE</Text>
+              </View>
+            )}
+          </View>
         </View>
 
         {/* Notification Button */}
@@ -93,7 +105,7 @@ export default WelcomeHeader;
 const styles = StyleSheet.create({
   headerContainer: {
     paddingHorizontal: 20,
-    backgroundColor: '#000',
+    backgroundColor: 'transparent',
     paddingBottom: 0,
   },
 
@@ -103,14 +115,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 5,
-    height: 45,
+    backgroundColor: 'rgba(0, 5, 20, 0.5)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+    height: 54,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 4,
   },
 
   titleContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 10,
     position: 'relative',
   },
 
@@ -121,6 +143,9 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     textAlign: 'center',
     textTransform: 'uppercase',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
 
   titleUnderline: {
@@ -128,7 +153,7 @@ const styles = StyleSheet.create({
     bottom: -1,
     height: 1.5,
     backgroundColor: '#c5ff00',
-    width: '76%',
+    width: '90%',
     borderRadius: 2,
     alignSelf: 'center',
     shadowColor: '#c5ff00',
@@ -220,5 +245,20 @@ const styles = StyleSheet.create({
     fontSize: 7,
     fontFamily: 'Montserrat_700Bold',
   },
+  offlineBadge: {
+    backgroundColor: '#333',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginLeft: 10,
+    borderWidth: 1,
+    borderColor: '#444',
+  },
+  offlineText: {
+    color: '#888',
+    fontSize: 8,
+    fontFamily: 'Montserrat_900Black',
+    letterSpacing: 1,
+  }
 });
 

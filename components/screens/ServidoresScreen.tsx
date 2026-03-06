@@ -1,6 +1,7 @@
 // ── IMPORTACIONES ────────────────────────────────────────────────────────────
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -108,6 +109,7 @@ const ServidoresScreen = ({ navigateTo }: any) => {
     };
 
     const handleSwitchPlan = async (idx: number) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { });
         const selected = plans[idx];
         setPlan(selected);
         setCurrentIndex(idx);
@@ -116,6 +118,11 @@ const ServidoresScreen = ({ navigateTo }: any) => {
     };
 
     const handleResponderAsignacion = async (nuevoEstado: string, motivo: string = '') => {
+        if (nuevoEstado === 'confirmado') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => { });
+        } else {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => { });
+        }
         const updatedEquipo = plan.equipo_ids.map((s: any) => s.miembro_id === memberId ? { ...s, estado: nuevoEstado, motivo } : s);
         const { error } = await supabase.from('cronogramas').update({ equipo_ids: updatedEquipo }).eq('id', plan.id);
         if (!error) {
@@ -155,6 +162,17 @@ const ServidoresScreen = ({ navigateTo }: any) => {
 
     return (
         <View style={[styles.mainContainer, { paddingTop: insets.top }]}>
+            <LinearGradient colors={['#050B25', '#020205']} style={StyleSheet.absoluteFill} />
+
+            {/* Mesh gradient - Top Right Lavender */}
+            <View style={{ position: 'absolute', top: -100, right: -100, width: 350, height: 350, borderRadius: 175, backgroundColor: 'rgba(124, 58, 237, 0.08)' }} />
+
+            {/* Mesh gradient - Bottom Left Deep Navy */}
+            <View style={{ position: 'absolute', bottom: -50, left: -100, width: 400, height: 400, borderRadius: 200, backgroundColor: 'rgba(30, 58, 138, 0.12)' }} />
+
+            {/* Mesh gradient - Bottom Right Cyan */}
+            <View style={{ position: 'absolute', bottom: -100, right: -100, width: 350, height: 350, borderRadius: 175, backgroundColor: 'rgba(6, 182, 212, 0.1)' }} />
+
             <View style={{ flex: 1 }}>
                 {plan ? (
                     <>
@@ -206,7 +224,7 @@ const ServidoresScreen = ({ navigateTo }: any) => {
                                 <View style={styles.rejectedBanner}>
                                     <MaterialCommunityIcons name="calendar-remove" size={40} color="#ff4444" />
                                     <Text style={styles.rejectedTitle}>Servicio Rechazado</Text>
-                                    <TouchableOpacity onPress={() => handleResponderAsignacion('pendiente')} style={styles.changeResponseBtn}>
+                                    <TouchableOpacity onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); handleResponderAsignacion('pendiente'); }} style={styles.changeResponseBtn}>
                                         <Text style={styles.changeResponseText}>CAMBIAR RESPUESTA</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -295,6 +313,13 @@ const ServidoresScreen = ({ navigateTo }: any) => {
                             plans={plans}
                             memberId={memberId}
                             onSelectPlan={handleSwitchPlan}
+                            onConfirm={async (idx) => {
+                                const target = plans[idx];
+                                setPlan(target);
+                                setCurrentIndex(idx);
+                                // Forzamos el estado local para que handleResponderAsignacion actúe sobre el plan correcto
+                                setTimeout(() => handleResponderAsignacion('confirmado'), 50);
+                            }}
                             fadeAnim={fadeAnim}
                             onRefresh={onRefresh}
                         />
@@ -342,7 +367,7 @@ const ServidoresScreen = ({ navigateTo }: any) => {
                         <View style={styles.modalContent}>
                             <View style={styles.modalHeader}>
                                 <Text style={styles.modalTitle}>Mis Bloqueos</Text>
-                                <TouchableOpacity onPress={() => setShowBlockoutModal(false)}><MaterialCommunityIcons name="close" size={24} color="#fff" /></TouchableOpacity>
+                                <TouchableOpacity onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowBlockoutModal(false); }}><MaterialCommunityIcons name="close" size={24} color="#fff" /></TouchableOpacity>
                             </View>
                             <CalendarPicker startDate={blockoutStart} endDate={blockoutEnd} onChangeStart={setBlockoutStart} onChangeEnd={setBlockoutEnd} />
                             <View style={styles.modalInputGroup}>
@@ -426,29 +451,25 @@ const ServidoresScreen = ({ navigateTo }: any) => {
 };
 
 const styles = StyleSheet.create({
-    mainContainer: { flex: 1, backgroundColor: '#000' },
+    mainContainer: { flex: 1, backgroundColor: '#020205' },
     container: { flex: 1 },
-    center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000' },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#020205' },
     mainHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, marginBottom: 30 },
     backButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#0a0a0a',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
         paddingHorizontal: 16,
         paddingVertical: 10,
-        borderRadius: 20,
+        borderRadius: 22,
         borderWidth: 1,
-        borderColor: '#1a1a1a',
-        shadowColor: '#c5ff00',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10
+        borderColor: 'rgba(255, 255, 255, 0.08)'
     },
     backText: { color: '#c5ff00', fontSize: 10, fontFamily: 'Montserrat_900Black', letterSpacing: 1.5, marginLeft: 8 },
-    mainHeaderLabel: { color: '#444', fontSize: 11, fontFamily: 'Montserrat_900Black', letterSpacing: 2 },
+    mainHeaderLabel: { color: '#999', fontSize: 11, fontFamily: 'Montserrat_900Black', letterSpacing: 2 },
     mainHeaderTitle: { color: '#fff', fontSize: 26, fontFamily: 'Montserrat_900Black', letterSpacing: -1, marginTop: -2 },
     listLabel: {
-        color: '#ddd',
+        color: '#999',
         fontSize: 10.5,
         fontFamily: 'Montserrat_900Black',
         letterSpacing: 2,
@@ -497,12 +518,12 @@ const styles = StyleSheet.create({
     inviteSub: { color: '#888', fontSize: 15, fontFamily: 'Inter_400Regular', lineHeight: 24 },
     rejectedBanner: {
         margin: 20, alignItems: 'center', padding: 40,
-        backgroundColor: '#0a0a0a', borderRadius: 32,
+        backgroundColor: 'rgba(255, 255, 255, 0.02)', borderRadius: 32,
         borderWidth: 1, borderColor: 'rgba(255, 68, 68, 0.1)'
     },
     rejectedTitle: { color: '#ff4444', fontSize: 20, fontFamily: 'Montserrat_900Black', marginTop: 20 },
     changeResponseBtn: { marginTop: 20, padding: 15 },
-    changeResponseText: { color: '#444', fontSize: 11, fontFamily: 'Montserrat_700Bold', letterSpacing: 1 },
+    changeResponseText: { color: '#888', fontSize: 11, fontFamily: 'Montserrat_700Bold', letterSpacing: 1 },
     mainBlockoutSection: { paddingHorizontal: 20, marginTop: 40 },
     blockoutTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
     addBtnCircle: {
@@ -512,8 +533,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.4, shadowRadius: 10, elevation: 8
     },
     emptyBlockoutsMain: {
-        padding: 35, backgroundColor: '#050505', borderRadius: 32,
-        borderStyle: 'dashed', borderWidth: 1, borderColor: '#151515'
+        padding: 35, backgroundColor: 'rgba(255, 255, 255, 0.02)', borderRadius: 32,
+        borderStyle: 'dashed', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)'
     },
     emptyBlockoutsMainText: {
         color: '#888', fontSize: 13, fontFamily: 'Inter_400Regular',
@@ -521,8 +542,8 @@ const styles = StyleSheet.create({
     },
     mainBlockoutList: { gap: 12 },
     mainBlockoutItem: {
-        flexDirection: 'row', alignItems: 'center', backgroundColor: '#0a0a0a',
-        padding: 16, borderRadius: 24, borderWidth: 1, borderColor: '#151515', gap: 16
+        flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.03)',
+        padding: 16, borderRadius: 24, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.05)', gap: 16
     },
     mbIcon: {
         width: 44, height: 44, borderRadius: 14,
@@ -530,7 +551,7 @@ const styles = StyleSheet.create({
         borderWidth: 1, borderColor: 'rgba(255, 68, 68, 0.2)'
     },
     mbDate: { color: '#fff', fontSize: 14, fontFamily: 'Montserrat_700Bold' },
-    mbReason: { color: '#555', fontSize: 11, fontFamily: 'Inter_400Regular', marginTop: 2 },
+    mbReason: { color: '#888', fontSize: 11, fontFamily: 'Inter_400Regular', marginTop: 2 },
     mbDelete: { padding: 10 },
     floatingActions: { position: 'absolute', bottom: 30, left: 20, right: 20, zIndex: 10 },
     floatingBlur: { borderRadius: 32, padding: 25, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(0,0,0,0.8)' },
@@ -545,15 +566,15 @@ const styles = StyleSheet.create({
     },
     confirmBtnText: { color: '#000', fontSize: 13, fontFamily: 'Montserrat_900Black' },
     declineBtn: {
-        flex: 1, backgroundColor: '#111', height: 64, borderRadius: 22,
-        justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#222'
+        flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.05)', height: 64, borderRadius: 22,
+        justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)'
     },
     declineBtnText: { color: '#fff', fontSize: 13, fontFamily: 'Montserrat_700Bold' },
     modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)' },
-    modalContent: { backgroundColor: '#050505', borderRadius: 40, padding: 30, width: '100%', borderWidth: 1, borderColor: '#151515' },
+    modalContent: { backgroundColor: '#080808', borderRadius: 40, padding: 30, width: '100%', borderWidth: 1, borderColor: '#151515' },
     modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 },
     modalTitle: { color: '#fff', fontSize: 26, fontFamily: 'Montserrat_900Black', letterSpacing: -1 },
-    modalDesc: { color: '#666', fontSize: 14, fontFamily: 'Inter_400Regular', lineHeight: 22, marginBottom: 20 },
+    modalDesc: { color: '#888', fontSize: 14, fontFamily: 'Inter_400Regular', lineHeight: 22, marginBottom: 20 },
     modalInputGroup: { marginTop: 20, marginBottom: 25 },
     modalInputLabel: {
         color: '#ddd',
@@ -566,8 +587,8 @@ const styles = StyleSheet.create({
         textShadowOffset: { width: 0, height: 0 },
         textShadowRadius: 6
     },
-    modalInput: { backgroundColor: '#0a0a0a', borderRadius: 18, height: 60, paddingHorizontal: 22, color: '#fff', fontSize: 16, fontFamily: 'Inter_400Regular', borderWidth: 1, borderColor: '#151515' },
-    modalTextArea: { backgroundColor: '#0a0a0a', borderRadius: 20, height: 130, padding: 22, color: '#fff', fontSize: 16, fontFamily: 'Inter_400Regular', textAlignVertical: 'top', borderWidth: 1, borderColor: '#151515' },
+    modalInput: { backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: 18, height: 60, paddingHorizontal: 22, color: '#fff', fontSize: 16, fontFamily: 'Inter_400Regular', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)' },
+    modalTextArea: { backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: 20, height: 130, padding: 22, color: '#fff', fontSize: 16, fontFamily: 'Inter_400Regular', textAlignVertical: 'top', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)' },
     modalPrimaryBtn: {
         backgroundColor: '#c5ff00', height: 64, borderRadius: 22,
         justifyContent: 'center', alignItems: 'center',
@@ -577,24 +598,24 @@ const styles = StyleSheet.create({
     modalPrimaryBtnText: { color: '#000', fontSize: 13, fontFamily: 'Montserrat_900Black' },
     modalFooter: { flexDirection: 'row', gap: 15, marginTop: 15 },
     modalCancelBtn: { flex: 1, height: 64, justifyContent: 'center', alignItems: 'center' },
-    modalCancelText: { color: '#444', fontFamily: 'Montserrat_700Bold', fontSize: 12, letterSpacing: 1 },
+    modalCancelText: { color: '#888', fontFamily: 'Montserrat_700Bold', fontSize: 12, letterSpacing: 1 },
     modalDangerBtn: { flex: 2, backgroundColor: '#ff4444', height: 64, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
     modalDangerText: { color: '#fff', fontSize: 13, fontFamily: 'Montserrat_900Black' },
     resHeader: {
         paddingTop: 60, paddingBottom: 22, paddingHorizontal: 20,
-        backgroundColor: '#000', flexDirection: 'row', alignItems: 'center',
-        borderBottomWidth: 1, borderBottomColor: '#151515'
+        backgroundColor: 'transparent', flexDirection: 'row', alignItems: 'center',
+        borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)'
     },
     resBack: {
         width: 48, height: 48, borderRadius: 18,
-        backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center',
-        borderWidth: 1, borderColor: '#1a1a1a'
+        backgroundColor: 'rgba(255, 255, 255, 0.05)', justifyContent: 'center', alignItems: 'center',
+        borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)'
     },
     resTitle: { color: '#fff', fontSize: 17, fontFamily: 'Montserrat_700Bold', flex: 1, marginLeft: 16 },
-    youtubeWrapper: { flex: 1, justifyContent: 'center', backgroundColor: '#000' },
+    youtubeWrapper: { flex: 1, justifyContent: 'center', backgroundColor: 'transparent' },
     lyricsBody: { color: '#fff', fontSize: 17, fontFamily: 'monospace', lineHeight: 28, paddingBottom: 100 },
     listLabelInline: {
-        color: '#ddd',
+        color: '#999',
         fontSize: 10.5,
         fontFamily: 'Montserrat_900Black',
         letterSpacing: 2,
@@ -604,14 +625,14 @@ const styles = StyleSheet.create({
     },
     chatFab: {
         position: 'absolute',
-        bottom: 40,
+        bottom: 85,
         right: 25,
         zIndex: 100,
         shadowColor: '#c5ff00',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.4,
-        shadowRadius: 15,
-        elevation: 12
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.5,
+        shadowRadius: 20,
+        elevation: 15
     },
     chatFabBlur: {
         width: 68,

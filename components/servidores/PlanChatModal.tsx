@@ -4,6 +4,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Image as ExpoImage } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
@@ -22,6 +23,7 @@ import {
     View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { sendPushNotification } from '../../lib/registerPushToken';
 import { supabase } from '../../lib/supabase';
 
 const { width } = Dimensions.get('window');
@@ -107,7 +109,7 @@ export const PlanChatModal: React.FC<PlanChatModalProps> = ({
             const ids = equipoIds.map(e => e.miembro_id).filter(Boolean);
             const { data } = await supabase
                 .from('miembros')
-                .select('id, nombre, apellido, foto_url')
+                .select('id, nombre, apellido, foto_url, token_notificacion')
                 .in('id', ids);
 
             if (data) {
@@ -278,6 +280,34 @@ export const PlanChatModal: React.FC<PlanChatModalProps> = ({
         if (error) {
             console.error('[PLAN-CHAT] Error crítico al insertar:', error);
             Alert.alert("Error de Envío", `Detalle: ${error.message}`);
+        } else {
+            const sender = participants.find(p => p.id === memberId || p.miembro_id === memberId);
+            const senderName = sender?.nombre ? sender.nombre : 'Alguien';
+
+            const receivers = participants.filter(p =>
+                (p.id !== memberId && p.miembro_id !== memberId) &&
+                p.token_notificacion &&
+                p.token_notificacion.trim() !== ''
+            );
+
+            let mediaUrl = null;
+            let bodyText = `${senderName}: ${text}`;
+
+            if (text.includes('📸 Foto enviada: ')) {
+                bodyText = `${senderName} envió una foto 📸`;
+                mediaUrl = text.split('📸 Foto enviada: ')[1]?.trim();
+            } else if (text.includes('📄 Archivo adjunto: ')) {
+                bodyText = `${senderName} envió un archivo 📄`;
+            }
+
+            Promise.all(receivers.map(receiver =>
+                sendPushNotification(
+                    receiver.token_notificacion,
+                    `${planTitle} (Chat)`,
+                    bodyText,
+                    mediaUrl
+                )
+            )).catch(err => console.error("Error al enviar notificaciones de chat:", err));
         }
     };
 
@@ -457,24 +487,30 @@ export const PlanChatModal: React.FC<PlanChatModalProps> = ({
     if (!visible) return null;
 
     return (
-        <View style={StyleSheet.absoluteFill}>
-            <BlurView intensity={35} tint="dark" style={StyleSheet.absoluteFill} />
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: '#020205' }]}>
+            <LinearGradient colors={['#050B25', '#020205']} style={StyleSheet.absoluteFill} />
+
+            {/* Mesh glow effects for atmosphere */}
+            <View style={{ position: 'absolute', top: -50, right: -50, width: 300, height: 300, borderRadius: 150, backgroundColor: 'rgba(124, 58, 237, 0.12)' }} />
+            <View style={{ position: 'absolute', bottom: 100, left: -100, width: 400, height: 400, borderRadius: 200, backgroundColor: 'rgba(30, 58, 138, 0.15)' }} />
+
+            <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
 
             <Image
                 source={require('../../assets/chat_bg.png')}
-                style={[StyleSheet.absoluteFill, { opacity: 0.35 }]}
+                style={[StyleSheet.absoluteFill, { opacity: 0.25 }]}
                 resizeMode="repeat"
             />
 
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                style={[styles.modalContent, { backgroundColor: 'transparent' }]}
+                style={styles.modalContent}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
             >
                 {/* Header y Banner flotantes con Glass Effect */}
                 <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 100, paddingTop: insets.top }}>
                     <View style={styles.headerContainer}>
-                        <BlurView intensity={70} tint="dark" style={styles.headerBlur}>
+                        <BlurView intensity={95} tint="dark" style={styles.headerBlur}>
                             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                                 <MaterialCommunityIcons name="chevron-left" size={32} color="#c5ff00" />
                             </TouchableOpacity>
@@ -534,7 +570,7 @@ export const PlanChatModal: React.FC<PlanChatModalProps> = ({
                             keyExtractor={(item) => item.id}
                             contentContainerStyle={[
                                 styles.listContent,
-                                { paddingTop: pinnedMsg ? 140 : 80, paddingBottom: 100 }
+                                { paddingTop: pinnedMsg ? 160 : 100, paddingBottom: 100 }
                             ]}
                             onScroll={(e) => {
                                 const { y } = e.nativeEvent.contentOffset;
@@ -687,14 +723,13 @@ export const PlanChatModal: React.FC<PlanChatModalProps> = ({
 
 const styles = StyleSheet.create({
     modalContent: { flex: 1, backgroundColor: 'transparent' },
-    headerContainer: { backgroundColor: 'transparent', zIndex: 100 },
+    headerContainer: { backgroundColor: 'transparent', zIndex: 100, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)' },
     headerBlur: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 15,
-        paddingVertical: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.05)'
+        paddingVertical: 12,
+        backgroundColor: 'transparent'
     },
     closeButton: { padding: 5 },
     headerInfo: { flex: 1, marginLeft: 10 },
@@ -709,8 +744,20 @@ const styles = StyleSheet.create({
     otherMessage: { justifyContent: 'flex-start' },
     avatar: { width: 30, height: 30, borderRadius: 10, marginRight: 8 },
     bubble: { maxWidth: width * 0.75, padding: 10, borderRadius: 18 },
-    myBubble: { backgroundColor: '#c5ff00', borderBottomRightRadius: 4 },
-    otherBubble: { backgroundColor: '#1a1a1a', borderBottomLeftRadius: 4, borderWidth: 1, borderColor: '#222' },
+    myBubble: {
+        backgroundColor: '#c5ff00',
+        borderBottomRightRadius: 4,
+        shadowColor: '#c5ff00',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8
+    },
+    otherBubble: {
+        backgroundColor: 'rgba(255,255,255,0.06)',
+        borderBottomLeftRadius: 4,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.08)'
+    },
     bubbleHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
     senderName: { color: '#c5ff00', fontSize: 10, fontWeight: '900' },
     messageText: { fontSize: 15, lineHeight: 20 },
@@ -721,7 +768,17 @@ const styles = StyleSheet.create({
     systemMessageText: { color: '#666', fontSize: 11, fontWeight: '600' },
 
     inputSection: { padding: 10, backgroundColor: 'transparent' },
-    inputBlur: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(25,25,25,0.95)', borderRadius: 25, paddingLeft: 10, paddingRight: 5, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+    inputBlur: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.04)',
+        borderRadius: 28,
+        paddingLeft: 10,
+        paddingRight: 5,
+        paddingVertical: 6,
+        borderWidth: 1.5,
+        borderColor: 'rgba(255,255,255,0.08)'
+    },
     attachButton: { width: 38, height: 38, justifyContent: 'center', alignItems: 'center' },
     input: { flex: 1, color: '#fff', fontSize: 15, paddingHorizontal: 10, paddingVertical: 8 },
     sendButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#c5ff00', justifyContent: 'center', alignItems: 'center' },

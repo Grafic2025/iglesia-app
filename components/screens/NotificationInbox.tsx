@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { Animated, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../../context/AppContext';
 
@@ -41,7 +42,13 @@ const NotificationInbox = ({ navigateTo }: any) => {
     };
 
     return (
-        <View style={styles.mainContainer}>
+        <View style={styles.mainWrapper}>
+            <LinearGradient colors={['#050B25', '#020205']} style={StyleSheet.absoluteFill} />
+
+            {/* Glowing Nebula effects */}
+            <View style={{ position: 'absolute', top: -50, left: -50, width: 250, height: 250, borderRadius: 125, backgroundColor: 'rgba(37, 99, 235, 0.08)' }} />
+            <View style={{ position: 'absolute', bottom: 100, right: -50, width: 300, height: 300, borderRadius: 150, backgroundColor: 'rgba(147, 51, 234, 0.06)' }} />
+
             <View style={[styles.headerLayout, { paddingTop: Math.max(insets.top, 16) }]}>
                 <TouchableOpacity onPress={() => navigateTo('Inicio')} style={styles.backButton}>
                     <MaterialCommunityIcons name="chevron-left" size={28} color="#c5ff00" />
@@ -103,6 +110,9 @@ const NotificationInbox = ({ navigateTo }: any) => {
                                         <Text style={styles.notifTime}>{item.date ? getRelativeTime(item.date) : ''}</Text>
                                     </View>
                                     <Text style={[styles.notifBody, !item.read && styles.notifBodyUnread]} numberOfLines={2}>{item.body}</Text>
+                                    {item.image && (
+                                        <Image source={{ uri: item.image }} style={styles.notifImage} resizeMode="cover" />
+                                    )}
                                 </View>
                             </TouchableOpacity>
                         ))}
@@ -114,16 +124,35 @@ const NotificationInbox = ({ navigateTo }: any) => {
 };
 
 const styles = StyleSheet.create({
-    mainContainer: { flex: 1, backgroundColor: '#000' },
+    mainWrapper: { flex: 1, backgroundColor: '#020205' },
     container: { flex: 1 },
     headerLayout: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, marginBottom: 10 },
-    backButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.8)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 22, borderWidth: 1, borderColor: '#333' },
-    backText: { color: '#c5ff00', fontSize: 11, fontWeight: '900', letterSpacing: 1, marginLeft: 5 },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 22,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.08)'
+    },
+    backText: { color: '#c5ff00', fontSize: 10, fontFamily: 'Montserrat_900Black', letterSpacing: 1.5, marginLeft: 8 },
     headerSub: { color: '#c5ff00', fontSize: 10, fontWeight: '900', letterSpacing: 2 },
     headerTitle: { color: '#fff', fontSize: 20, fontWeight: '900', letterSpacing: -0.5 },
     allReadBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#050505', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#111' },
 
-    unreadBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(197, 255, 0, 0.05)', padding: 15, borderRadius: 20, marginBottom: 20, borderWidth: 1, borderColor: 'rgba(197, 255, 0, 0.1)' },
+    unreadBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(197, 255, 0, 0.06)',
+        paddingHorizontal: 20,
+        paddingVertical: 18,
+        borderRadius: 24,
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(197, 255, 0, 0.12)'
+    },
     unreadTag: { backgroundColor: '#c5ff00', width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
     unreadTagText: { color: '#000', fontSize: 11, fontWeight: '900' },
     unreadBannerText: { color: '#c5ff00', fontSize: 13, fontWeight: '900' },
@@ -131,18 +160,37 @@ const styles = StyleSheet.create({
     emptyState: { alignItems: 'center', marginTop: 100, padding: 40 },
     emptyIconCircle: { width: 100, height: 100, borderRadius: 50, borderStyle: 'dashed', borderWidth: 1, borderColor: '#111', justifyContent: 'center', alignItems: 'center' },
     emptyTitle: { color: '#fff', fontSize: 22, fontWeight: '900', marginTop: 30 },
-    emptySub: { color: '#444', fontSize: 14, textAlign: 'center', marginTop: 12, lineHeight: 22 },
+    emptySub: { color: '#888', fontSize: 14, textAlign: 'center', marginTop: 12, lineHeight: 22 },
 
-    notifItem: { flexDirection: 'row', backgroundColor: '#050505', padding: 20, borderRadius: 24, marginBottom: 12, borderWidth: 1, borderColor: '#111', alignItems: 'center' },
-    notifItemUnread: { backgroundColor: '#070a00', borderColor: 'rgba(197, 255, 0, 0.15)' },
+    notifItem: {
+        flexDirection: 'row',
+        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+        padding: 20,
+        borderRadius: 28,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.05)',
+        alignItems: 'center'
+    },
+    notifItemUnread: {
+        backgroundColor: 'rgba(197, 255, 0, 0.02)',
+        borderColor: 'rgba(197, 255, 0, 0.12)'
+    },
     notifIconBox: { width: 50, height: 50, borderRadius: 16, backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
     statusDot: { position: 'absolute', top: -4, right: -4, width: 10, height: 10, borderRadius: 5, backgroundColor: '#c5ff00', borderWidth: 2, borderColor: '#000', zIndex: 1 },
     notifMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-    notifTitle: { color: '#666', fontSize: 15, fontWeight: '800', flex: 1, marginRight: 10 },
+    notifTitle: { color: '#888', fontSize: 15, fontWeight: '800', flex: 1, marginRight: 10 },
     notifTitleUnread: { color: '#fff' },
-    notifTime: { color: '#333', fontSize: 10, fontWeight: '900' },
-    notifBody: { color: '#444', fontSize: 13, lineHeight: 18 },
-    notifBodyUnread: { color: '#888' },
+    notifTime: { color: '#666', fontSize: 10, fontWeight: '900' },
+    notifBody: { color: '#777', fontSize: 13, lineHeight: 18 },
+    notifBodyUnread: { color: '#999' },
+    notifImage: {
+        width: '100%',
+        height: 120,
+        borderRadius: 16,
+        marginTop: 10,
+        backgroundColor: '#111'
+    }
 });
 
 export default NotificationInbox;

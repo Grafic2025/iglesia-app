@@ -72,7 +72,8 @@ const MessagesScreen = ({ navigateTo }: { navigateTo: (s: string) => void }) => 
     }
 
     return (
-        <View style={styles.container}>
+        <View style={styles.mainWrapper}>
+            <LinearGradient colors={['#050B25', '#020205']} style={StyleSheet.absoluteFill} />
             <View style={styles.header}>
                 <Image
                     source={{ uri: recursos[0]?.portada_url }}
@@ -85,7 +86,7 @@ const MessagesScreen = ({ navigateTo }: { navigateTo: (s: string) => void }) => 
 
                 <View style={[styles.headerSafe, { paddingTop: insets.top }]}>
                     <TouchableOpacity onPress={() => navigateTo('Inicio')} style={styles.backButton}>
-                        <MaterialCommunityIcons name="chevron-left" size={28} color="#c5ff00" />
+                        <MaterialCommunityIcons name="chevron-left" size={24} color="#c5ff00" />
                         <Text style={styles.backText}>VOLVER</Text>
                     </TouchableOpacity>
 
@@ -170,12 +171,22 @@ const MessagesScreen = ({ navigateTo }: { navigateTo: (s: string) => void }) => 
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#000' },
-    loadingContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' },
+    mainWrapper: { flex: 1, backgroundColor: '#020205' },
+    loadingContainer: { flex: 1, backgroundColor: '#020205', justifyContent: 'center', alignItems: 'center' },
     header: { height: 320, position: 'relative' },
     headerSafe: { flex: 1, padding: 25 },
-    backButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.8)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 22, borderWidth: 1, borderColor: '#333', alignSelf: 'flex-start' },
-    backText: { color: '#c5ff00', fontSize: 11, fontWeight: '900', letterSpacing: 1, marginLeft: 5 },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 22,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+        alignSelf: 'flex-start'
+    },
+    backText: { color: '#c5ff00', fontSize: 10, fontFamily: 'Montserrat_900Black', letterSpacing: 1.5, marginLeft: 8 },
     headerBody: { marginTop: 'auto', marginBottom: 30 },
     headerLabel: { color: '#c5ff00', fontSize: 11, fontWeight: '900', letterSpacing: 4, textShadowColor: '#000', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 4 },
     headerTitle: { color: '#fff', fontSize: 32, fontWeight: '900', letterSpacing: -1, marginTop: 5, textShadowColor: '#000', textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 6 },
@@ -216,7 +227,7 @@ const styles = StyleSheet.create({
     videoMetaTitle: { color: '#fff', fontSize: 24, fontWeight: '900' },
     videoMetaSubtitle: { color: '#c5ff00', fontSize: 13, fontWeight: '700', marginTop: 5 },
     modalDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 25 },
-    videoDescLabel: { color: '#444', fontSize: 11, fontWeight: '900', letterSpacing: 2, marginBottom: 10 },
+    videoDescLabel: { color: '#999', fontSize: 11, fontWeight: '900', letterSpacing: 2, marginBottom: 10 },
     videoDescText: { color: '#888', fontSize: 14, lineHeight: 22, fontWeight: '400' },
 });
 

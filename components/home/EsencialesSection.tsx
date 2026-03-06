@@ -1,5 +1,6 @@
 import { FontAwesome } from '@expo/vector-icons';
 import { Image as ExpoImage } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -25,6 +26,10 @@ const EsencialesSection: React.FC<EsencialesSectionProps> = React.memo(({ data, 
                     style={styles.videoThumbnail}
                     contentFit="cover"
                     placeholder={BLUR_HASH}
+                />
+                <LinearGradient
+                    colors={['transparent', 'transparent', 'rgba(0, 0, 0, 0.8)']}
+                    style={StyleSheet.absoluteFill}
                 />
                 {watchedVideos.has(item.id) && (
                     <View style={styles.videoWatchedBadge}>
@@ -66,13 +71,28 @@ const EsencialesSection: React.FC<EsencialesSectionProps> = React.memo(({ data, 
 });
 
 const styles = StyleSheet.create({
-    sectionContainer: { marginBottom: 10 },
-    sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 25, alignItems: 'center', marginBottom: 10 },
-    sectionTitle: { fontSize: 15, fontWeight: '900', color: '#fff', letterSpacing: 1 },
-    viewMoreBtn: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#0d0d0d', borderWidth: 1, borderColor: '#1a1a1a' },
-    viewMoreText: { color: '#888', fontSize: 10, fontWeight: '800' },
+    sectionContainer: { marginBottom: 20 },
+    sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 25, alignItems: 'center', marginBottom: 15 },
+    sectionTitle: { fontSize: 13, fontFamily: 'Montserrat_900Black', color: '#fff', letterSpacing: 1.5, opacity: 0.9 },
+    viewMoreBtn: {
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 14,
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.08)'
+    },
+    viewMoreText: { color: '#c5ff00', fontSize: 9, fontWeight: '900', letterSpacing: 1 },
     videoCard: { width: 180, marginRight: 15 },
-    videoThumbnailContainer: { height: 110, borderRadius: 24, overflow: 'hidden', marginBottom: 12, backgroundColor: '#000' },
+    videoThumbnailContainer: {
+        height: 110,
+        borderRadius: 24,
+        overflow: 'hidden',
+        marginBottom: 12,
+        backgroundColor: '#020617',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.05)'
+    },
     videoThumbnail: { width: '100%', height: '100%' },
     videoPlayOverlay: { position: 'absolute', bottom: 10, right: 10, width: 34, height: 34, borderRadius: 17, backgroundColor: '#c5ff00', justifyContent: 'center', alignItems: 'center', shadowColor: '#c5ff00', shadowOpacity: 0.3, shadowRadius: 5, elevation: 5 },
     videoWatchedBadge: { position: 'absolute', top: 10, left: 10, width: 22, height: 22, borderRadius: 11, backgroundColor: '#c5ff00', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#000' },

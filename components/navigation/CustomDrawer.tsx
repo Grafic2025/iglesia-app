@@ -1,6 +1,6 @@
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image as ExpoImage } from 'expo-image';
-import * as WebBrowser from 'expo-web-browser';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { Animated, Dimensions, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -18,7 +18,6 @@ interface CustomDrawerProps {
     navigateTo: (screen: string) => void;
     pickImage: () => void;
     logout: () => void;
-    deleteAccount: () => Promise<void>;
     refreshData: () => Promise<void>;
 }
 
@@ -37,7 +36,6 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
     navigateTo,
     pickImage,
     logout,
-    deleteAccount,
     refreshData
 }) => {
     const [refreshing, setRefreshing] = useState(false);
@@ -49,6 +47,14 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
     };
     return (
         <Animated.View style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}>
+            <LinearGradient colors={['#010A2A', '#020205']} style={StyleSheet.absoluteFill} />
+
+            {/* Mesh gradient effect - Top Left Blue */}
+            <View style={{ position: 'absolute', top: -100, left: -50, width: 300, height: 300, borderRadius: 150, backgroundColor: 'rgba(37, 99, 235, 0.12)' }} />
+
+            {/* Mesh gradient effect - Bottom Right Purple */}
+            <View style={{ position: 'absolute', bottom: -100, right: -50, width: 250, height: 250, borderRadius: 125, backgroundColor: 'rgba(147, 51, 234, 0.08)' }} />
+
 
             <ScrollView
                 style={styles.contentContainer}
@@ -171,20 +177,6 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
                         <Text style={styles.logoutText}>CERRAR SESIÓN</Text>
                     </View>
                 </TouchableOpacity>
-
-                {/* Eliminar cuenta */}
-                <TouchableOpacity style={styles.deleteButton} onPress={deleteAccount}>
-                    <MaterialCommunityIcons name="account-remove" size={16} color="#666" />
-                    <Text style={styles.deleteText}>Eliminar mi cuenta</Text>
-                </TouchableOpacity>
-
-                {/* Política de Privacidad */}
-                <TouchableOpacity
-                    style={styles.privacyDrawerLink}
-                    onPress={() => WebBrowser.openBrowserAsync('https://iglesia-admin.vercel.app/privacy')}
-                >
-                    <Text style={styles.privacyDrawerText}>Política de Privacidad</Text>
-                </TouchableOpacity>
             </ScrollView>
         </Animated.View>
     );
@@ -215,7 +207,7 @@ const styles = StyleSheet.create({
         top: 0,
         bottom: 0,
         width: width * 0.8,
-        backgroundColor: '#0d0d0d',
+        backgroundColor: '#010A2A',
         zIndex: 1000,
         overflow: 'hidden',
         borderRightWidth: 1,
@@ -227,7 +219,7 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingHorizontal: 20,
         paddingTop: 60,
-        paddingBottom: 40,
+        paddingBottom: 140,
         flexGrow: 1
     },
     drawerHeader: {
@@ -371,6 +363,7 @@ const styles = StyleSheet.create({
     },
     logoutButton: {
         marginTop: 'auto',
+        marginBottom: 60,
         borderRadius: 20,
         overflow: 'hidden'
     },
@@ -387,30 +380,4 @@ const styles = StyleSheet.create({
         marginLeft: 12,
         letterSpacing: 2
     },
-    deleteButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 14,
-        marginTop: 8,
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.04)',
-    },
-    deleteText: {
-        color: '#555',
-        fontSize: 11,
-        fontWeight: '600',
-        marginLeft: 6,
-    },
-    privacyDrawerLink: {
-        marginTop: 15,
-        alignItems: 'center',
-        paddingVertical: 10,
-    },
-    privacyDrawerText: {
-        color: '#444',
-        fontSize: 10,
-        textDecorationLine: 'underline',
-        fontWeight: '600',
-    }
 });

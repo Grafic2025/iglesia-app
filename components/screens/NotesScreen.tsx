@@ -1,8 +1,10 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import { Alert, Animated, Modal, RefreshControl, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../../context/AppContext';
 
 interface Nota {
@@ -13,6 +15,7 @@ interface Nota {
 }
 
 const NotesScreen = ({ navigateTo }: any) => {
+    const insets = useSafeAreaInsets();
     const { memberId, refreshData } = useApp();
     const [notas, setNotas] = useState<Nota[]>([]);
     const [modalVisible, setModalVisible] = useState(false);
@@ -89,8 +92,14 @@ const NotesScreen = ({ navigateTo }: any) => {
     };
 
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
+        <View style={styles.mainWrapper}>
+            <LinearGradient colors={['#050B25', '#020205']} style={StyleSheet.absoluteFill} />
+
+            {/* Glowing Nebula effects */}
+            <View style={{ position: 'absolute', top: -100, left: -50, width: 300, height: 300, borderRadius: 150, backgroundColor: 'rgba(37, 99, 235, 0.1)' }} />
+            <View style={{ position: 'absolute', bottom: 100, right: -100, width: 400, height: 400, borderRadius: 200, backgroundColor: 'rgba(147, 51, 234, 0.08)' }} />
+
+            <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
                 <TouchableOpacity onPress={() => navigateTo('Inicio')} style={styles.backButton}>
                     <MaterialCommunityIcons name="chevron-left" size={28} color="#c5ff00" />
                     <Text style={styles.backText}>VOLVER</Text>
@@ -159,7 +168,7 @@ const NotesScreen = ({ navigateTo }: any) => {
                 <View style={styles.modalOverlay}>
                     <BlurView intensity={90} tint="dark" style={StyleSheet.absoluteFill} />
                     <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
+                        <View style={[styles.modalHeader, { paddingTop: Math.max(insets.top, 16) }]}>
                             <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalCancel}>
                                 <Text style={styles.modalCancelText}>CANCELAR</Text>
                             </TouchableOpacity>
@@ -202,38 +211,64 @@ const NotesScreen = ({ navigateTo }: any) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#000' },
-    header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 60, paddingBottom: 20 },
-    backButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.8)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 22, borderWidth: 1, borderColor: '#333' },
-    backText: { color: '#c5ff00', fontSize: 11, fontWeight: '900', letterSpacing: 1, marginLeft: 5 },
+    mainWrapper: { flex: 1, backgroundColor: '#020205' },
+    header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, marginBottom: 10 },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 22,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.08)'
+    },
+    backText: { color: '#c5ff00', fontSize: 10, fontFamily: 'Montserrat_900Black', letterSpacing: 1.5, marginLeft: 8 },
     headerTitles: { flex: 1, marginLeft: 15 },
     headerLabel: { color: '#c5ff00', fontSize: 10, fontWeight: '900', letterSpacing: 2 },
     headerTitle: { color: '#fff', fontSize: 24, fontWeight: '900', letterSpacing: -0.5 },
-    addBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#c5ff00', justifyContent: 'center', alignItems: 'center' },
+    addBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#c5ff00', justifyContent: 'center', alignItems: 'center', shadowColor: '#c5ff00', shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
 
     listContainer: { padding: 20, paddingBottom: 100 },
-    notaCard: { borderRadius: 24, overflow: 'hidden', marginBottom: 15, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#111' },
-    notaCardBlur: { padding: 20 },
+    notaCard: {
+        borderRadius: 28,
+        overflow: 'hidden',
+        marginBottom: 16,
+        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.05)'
+    },
+    notaCardBlur: { padding: 22 },
     notaHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-    notaDate: { color: '#c5ff00', fontSize: 10, fontWeight: '900' },
+    notaDate: { color: '#c5ff00', fontSize: 10, fontFamily: 'Montserrat_900Black', letterSpacing: 1 },
     notaActions: { flexDirection: 'row', gap: 10 },
-    actionIcon: { width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.03)', justifyContent: 'center', alignItems: 'center' },
+    actionIcon: { width: 34, height: 34, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
     notaTitle: { color: '#fff', fontSize: 18, fontWeight: '900', marginBottom: 10 },
-    notaContent: { color: '#666', fontSize: 14, lineHeight: 22 },
+    notaContent: { color: '#aaa', fontSize: 14, lineHeight: 22, fontWeight: '500' },
 
     emptyState: { alignItems: 'center', marginTop: 100, paddingHorizontal: 30 },
-    emptyIconBox: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center', borderStyle: 'dashed', borderWidth: 1, borderColor: '#222' },
+    emptyIconBox: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderStyle: 'dashed',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.1)'
+    },
     emptyTitle: { color: '#fff', fontSize: 20, fontWeight: '900', marginTop: 25 },
-    emptyText: { color: '#444', fontSize: 13, textAlign: 'center', marginTop: 10, lineHeight: 20 },
-    createFirstBtn: { backgroundColor: '#c5ff00', paddingHorizontal: 25, paddingVertical: 18, borderRadius: 20, marginTop: 40 },
+    emptyText: { color: '#888', fontSize: 14, textAlign: 'center', marginTop: 12, lineHeight: 22, fontWeight: '500' },
+    createFirstBtn: { backgroundColor: '#c5ff00', paddingHorizontal: 25, paddingVertical: 18, borderRadius: 22, marginTop: 40 },
     createFirstBtnText: { color: '#000', fontWeight: '900', fontSize: 12, letterSpacing: 1 },
 
     modalOverlay: { flex: 1 },
     modalContent: { flex: 1 },
     modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 60, paddingBottom: 20 },
     modalHeaderCenter: { alignItems: 'center' },
-    modalTitleLabel: { color: '#444', fontSize: 9, fontWeight: '900' },
-    modalTitleMain: { color: '#fff', fontSize: 14, fontWeight: '900', letterSpacing: 1 },
+    modalTitleLabel: { color: '#888', fontSize: 10, fontFamily: 'Montserrat_900Black', letterSpacing: 1 },
+    modalTitleMain: { color: '#fff', fontSize: 16, fontWeight: '900', letterSpacing: 1 },
     modalCancel: { flex: 1 },
     modalCancelText: { color: '#ff4444', fontSize: 11, fontWeight: '900' },
     modalSave: { flex: 1, alignItems: 'flex-end' },

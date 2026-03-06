@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Animated, Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,13 +17,14 @@ const NewsDetail = ({ news, navigateTo }: { news: any, navigateTo: any }) => {
     if (!news) return null;
 
     return (
-        <View style={styles.mainContainer}>
+        <View style={styles.mainWrapper}>
+            <LinearGradient colors={['#050B25', '#020205']} style={StyleSheet.absoluteFill} />
             <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 100 }}>
                 <View style={styles.imageContainer}>
                     <Image source={{ uri: news.imagen_url }} style={styles.image} />
                     <View style={[styles.headerActions, { paddingTop: Math.max(insets.top, 16) }]}>
                         <TouchableOpacity onPress={() => navigateTo('Inicio')} style={styles.backButton}>
-                            <MaterialCommunityIcons name="chevron-left" size={28} color="#c5ff00" />
+                            <MaterialCommunityIcons name="chevron-left" size={24} color="#c5ff00" />
                             <Text style={styles.backText}>VOLVER</Text>
                         </TouchableOpacity>
                     </View>
@@ -54,19 +56,28 @@ const NewsDetail = ({ news, navigateTo }: { news: any, navigateTo: any }) => {
 };
 
 const styles = StyleSheet.create({
-    mainContainer: { flex: 1, backgroundColor: '#000' },
+    mainWrapper: { flex: 1, backgroundColor: '#020205' },
     container: { flex: 1 },
     imageContainer: { width: '100%', height: 350, backgroundColor: '#111' },
     image: { width: '100%', height: '100%', resizeMode: 'cover' },
     headerActions: { position: 'absolute', left: 20, right: 20, zIndex: 10 },
-    backButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', alignSelf: 'flex-start' },
-    backText: { color: '#c5ff00', fontSize: 11, fontWeight: '900', letterSpacing: 1, marginLeft: 5 },
-    content: { flex: 1, backgroundColor: '#000', marginTop: -40, borderTopLeftRadius: 40, borderTopRightRadius: 40, padding: 30 },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 22,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.2)'
+    },
+    backText: { color: '#c5ff00', fontSize: 10, fontFamily: 'Montserrat_900Black', letterSpacing: 1.5, marginLeft: 8 },
+    content: { flex: 1, backgroundColor: 'transparent', marginTop: -40, borderTopLeftRadius: 40, borderTopRightRadius: 40, padding: 30 },
     metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
     categoryBadge: { backgroundColor: '#c5ff00', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
     categoryText: { color: '#000', fontSize: 10, fontWeight: '900', letterSpacing: 1 },
     dateBox: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    dateText: { color: '#444', fontSize: 12, fontWeight: '700' },
+    dateText: { color: '#919191', fontSize: 11, fontWeight: '900', letterSpacing: 0.5 },
 
     title: { color: '#fff', fontSize: 28, fontWeight: '900', lineHeight: 36, letterSpacing: -0.5 },
 

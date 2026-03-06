@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCameraPermissions } from 'expo-camera';
+import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import * as Notifications from 'expo-notifications';
-import * as SplashScreen from 'expo-splash-screen';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Animated, Dimensions } from 'react-native';
 
@@ -76,6 +76,7 @@ export function useAppContentLogic() {
 
   const toggleMenu = () => {
     const toValue = isMenuOpen ? -width * 0.8 : 0;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { });
     Animated.timing(slideAnim, { toValue, duration: 300, useNativeDriver: true }).start();
     setIsMenuOpen(!isMenuOpen);
   };
@@ -102,18 +103,30 @@ export function useAppContentLogic() {
 
       // Manejar notificaciones cuando la app está abierta
       notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-        const { title, body } = notification.request.content;
-        addNotificationToInbox({ title, body });
+        const { title, body, data } = notification.request.content;
+        addNotificationToInbox({ title, body, image: data?.image });
       });
 
       // Manejar clic en la notificación
       responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
         const { data } = response.notification.request.content;
 
-        // Si es una notificación de servicio, llevar directamente a la pantalla de Servidores
+        // --- LÓGICA DE DEEP LINKING ---
         if (data?.type === 'service_reminder') {
           navigateTo('Servidores');
+        } else if (data?.type === 'news') {
+          if (data.news) {
+            setNoticiaSeleccionada(data.news);
+            navigateTo('NewsDetail');
+          } else {
+            navigateTo('Inicio');
+          }
+        } else if (data?.type === 'video') {
+          navigateTo('Videos');
+        } else if (data?.type === 'prayer') {
+          navigateTo('Necesito Oración');
         } else {
+          // Por defecto, ir al buzón de notificaciones
           navigateTo('Notificaciones');
         }
       });
@@ -138,11 +151,7 @@ export function useAppContentLogic() {
     }
   }, [isLoggedIn, loading, nombre, apellido]);
 
-  useEffect(() => {
-    if (!loading) {
-      SplashScreen.hideAsync().catch(() => { });
-    }
-  }, [loading]);
+
 
   const handleLogin = async () => {
     if (!localNombre || !localApellido) return;
@@ -282,6 +291,7 @@ export function useAppContentLogic() {
   const handleBarCodeScanned = async ({ data }: any) => {
     setScanning(false);
     if (data === 'PRESENTE_IDS') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => { });
       const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
       const hora = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 

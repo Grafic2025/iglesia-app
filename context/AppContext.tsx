@@ -33,6 +33,7 @@ export interface AppContextType {
     markNotificationRead: (id: string) => void;
     markAllRead: () => void;
     homeActions: any[];
+    isOffline: boolean;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -62,31 +63,55 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [esAdmin, setEsAdmin] = useState(false);
     const [notificationInbox, setNotificationInbox] = useState<any[]>([]);
     const [homeActions, setHomeActions] = useState<any[]>([]);
+    const [isOffline, setIsOffline] = useState(false);
 
     /**
      * Carga la sesión del usuario y la caché de forma ultra-rápida usando Promise.all.
      */
     const loadSession = useCallback(async () => {
+        console.log('[SESSION] Cargando sesión desde almacenamiento local...');
         try {
             // Buscamos todo en paralelo para ganar velocidad de arranque
-            const [mid, savedNombre, savedApellido, cachedNews, cachedInbox, cachedActions] = await Promise.all([
+            const [
+                mid, savedNombre, savedApellido, savedFoto, savedNac, savedZona,
+                savedEsServidor, savedEsAdmin, savedRacha,
+                cachedNews, cachedInbox, cachedActions, cachedEsenciales, cachedAsistencias
+            ] = await Promise.all([
                 SecureStore.getItemAsync('memberId'),
                 AsyncStorage.getItem('nombre'),
                 AsyncStorage.getItem('apellido'),
+                AsyncStorage.getItem('foto_url'),
+                AsyncStorage.getItem('fecha_nacimiento'),
+                AsyncStorage.getItem('zona'),
+                AsyncStorage.getItem('es_servidor'),
+                AsyncStorage.getItem('es_admin'),
+                AsyncStorage.getItem('racha_usuario'),
                 AsyncStorage.getItem('cache_noticias'),
                 AsyncStorage.getItem('notificationInbox'),
-                AsyncStorage.getItem('cache_home_actions')
+                AsyncStorage.getItem('cache_home_actions'),
+                AsyncStorage.getItem('cache_esenciales'),
+                AsyncStorage.getItem('cache_asistencias_detalle')
             ]);
 
-            // Restaurar sesión
+            console.log(`[SESSION] Datos recuperados -> ID: ${mid || 'Ninguno'}, Nombre: ${savedNombre || 'Ninguno'}`);
+
+            // Restaurar sesión y perfil
             if (savedNombre) setNombre(savedNombre);
             if (savedApellido) setApellido(savedApellido);
+            if (savedFoto) setFotoUrl(savedFoto);
+            if (savedNac) setFechaNacimiento(savedNac);
+            if (savedZona) setZona(savedZona);
+            if (savedEsServidor) setEsServidor(savedEsServidor === 'true');
+            if (savedEsAdmin) setEsAdmin(savedEsAdmin === 'true');
+            if (savedRacha) setRachaUsuario(parseInt(savedRacha) || 0);
+
             if (mid && savedNombre) {
                 setMemberId(mid);
                 setIsLoggedIn(true);
+                console.log('[SESSION] Sesión restaurada y activa.');
             }
 
-            // Restaurar caché de noticias e inbox inmediatamente
+            // Restaurar caché de noticias, inbox y acciones
             if (cachedNews) {
                 const parsed = JSON.parse(cachedNews);
                 if (Array.isArray(parsed)) setNoticiasSupabase(parsed);
@@ -99,12 +124,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 const parsed = JSON.parse(cachedActions);
                 if (Array.isArray(parsed)) setHomeActions(parsed);
             }
+            if (cachedEsenciales) {
+                const parsed = JSON.parse(cachedEsenciales);
+                if (Array.isArray(parsed)) setSerieEsenciales(parsed);
+            }
+            if (cachedAsistencias) {
+                const parsed = JSON.parse(cachedAsistencias);
+                if (Array.isArray(parsed)) setAsistenciasDetalle(parsed);
+            }
 
         } catch (e) {
-            console.error("Error ultra-fast loading session:", e);
+            console.error("[SESSION] ERROR crítico al cargar sesión:", e);
         } finally {
             // Liberamos el círculo amarillo lo antes posible
             setLoading(false);
+            console.log('[SESSION] Carga inicial completa.');
         }
     }, []);
 
@@ -116,14 +150,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
      * @param surname Apellido del miembro.
      */
     const login = async (id: string, name: string, surname: string) => {
-        await SecureStore.setItemAsync('memberId', id);
-        await AsyncStorage.setItem('nombre', name);
-        await AsyncStorage.setItem('apellido', surname);
-        await AsyncStorage.setItem('loginTimestamp', new Date().toISOString());
-        setMemberId(id);
-        setNombre(name);
-        setApellido(surname);
-        setIsLoggedIn(true);
+        console.log(`[AUTH] Iniciando login para ${name} ${surname} (ID: ${id})`);
+        try {
+            await SecureStore.setItemAsync('memberId', id);
+            await SecureStore.setItemAsync('biometricMemberId', id);
+            await AsyncStorage.setItem('nombre', name);
+            await AsyncStorage.setItem('apellido', surname);
+            await AsyncStorage.setItem('loginTimestamp', new Date().toISOString());
+            setMemberId(id);
+            setNombre(name);
+            setApellido(surname);
+            setIsLoggedIn(true);
+            console.log('[AUTH] Sesión guardada en almacenamiento seguro.');
+        } catch (e) {
+            console.error('[AUTH] ERROR al guardar sesión:', e);
+        }
     };
 
     /**
@@ -132,20 +173,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
      * Retorna true si la sesión fue restaurada correctamente.
      */
     const loginWithBiometrics = async (): Promise<boolean> => {
+        console.log('[AUTH-BIO] Intentando login biométrico secundario...');
         try {
-            const mid = await SecureStore.getItemAsync('memberId');
+            // Usamos biometricMemberId si no hay una sesión activa, lo que permite re-entrar tras un logout
+            const mid = await SecureStore.getItemAsync('biometricMemberId') || await SecureStore.getItemAsync('memberId');
             const savedNombre = await AsyncStorage.getItem('nombre');
             const savedApellido = await AsyncStorage.getItem('apellido');
+
+            console.log(`[AUTH-BIO] Datos encontrados -> ID: ${mid ? 'SÍ' : 'NO'}, Nombre: ${savedNombre ? 'SÍ' : 'NO'}`);
+
             if (mid && savedNombre) {
                 setMemberId(mid);
                 setNombre(savedNombre);
                 if (savedApellido) setApellido(savedApellido);
                 setIsLoggedIn(true);
+                console.log('[AUTH-BIO] Sesión restaurada exitosamente.');
                 return true;
             }
+            console.warn('[AUTH-BIO] No se encontraron credenciales suficientes para restaurar sesión.');
             return false;
         } catch (e) {
-            console.error('Error in loginWithBiometrics:', e);
+            console.error('[AUTH-BIO] ERROR crítico en loginWithBiometrics:', e);
             return false;
         }
     };
@@ -214,6 +262,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
             // 4. Limpiar TODO el almacenamiento local
             await SecureStore.deleteItemAsync('memberId');
+            await SecureStore.deleteItemAsync('biometricMemberId');
             await AsyncStorage.clear();
             console.log('[DELETE-ACCOUNT] Almacenamiento local limpiado.');
 
@@ -299,8 +348,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const fetchYoutubeData = useCallback(async (force = false) => {
         const now = Date.now();
         const TEN_MIN = 10 * 60 * 1000;
-        if (!force && now - youtubeCacheTs.current < TEN_MIN) return;
+        if (!force && now - youtubeCacheTs.current < TEN_MIN) {
+            console.log('[YOUTUBE] Usando caché (TTL < 10min).');
+            return;
+        }
 
+        console.log('[YOUTUBE] Obteniendo feed RSS de videos...');
         const channelId = 'UCa9xuv0bgR6dTD_9GTbFXQg';
         const playlistId = 'PL9eGAPSt61HBxiNwoXIG0xpaWzf0aNTuC';
 
@@ -324,6 +377,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     return { id, title, thumb: `https://i.ytimg.com/vi/${id}/mqdefault.jpg` };
                 }).filter(v => v.id);
                 AsyncStorage.setItem('cache_videos', JSON.stringify(parsed));
+                console.log(`[YOUTUBE] ${parsed.length} videos generales cacheados.`);
             }
 
             // --- Esenciales: canal + playlist, deduplicados ---
@@ -342,28 +396,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 return v.titulo?.toUpperCase().includes('ESENCIALES');
             });
             setSerieEsenciales(unique);
+            AsyncStorage.setItem('cache_esenciales', JSON.stringify(unique));
+            console.log(`[YOUTUBE] ${unique.length} videos Esenciales encontrados.`);
 
             // --- Live check (reutiliza el channelXml ya descargado) ---
             if (channelXml.includes('yt:status>live')) {
                 setIsCurrentlyLive(true);
                 setLiveVideoUrl('https://youtube.com/@iglesiadelsalvador/live');
+                console.log('[YOUTUBE] ¡ESTAMOS EN VIVO! URL de live detectada.');
             } else {
                 setIsCurrentlyLive(false);
+                console.log('[YOUTUBE] No hay transmisión en vivo en curso.');
             }
 
             youtubeCacheTs.current = now;
-        } catch (e) { console.log('YouTube fetch error:', e); }
+        } catch (e) { console.error('[YOUTUBE] Error en fetch:', e); }
     }, []);
 
     /** Solo refresca Supabase en paralelo — usado por los realtime listeners */
     const refreshSupabaseOnly = useCallback(async () => {
-        if (!memberId) return;
+        if (!memberId) {
+            console.log('[SUPABASE] No hay ID de miembro, saltando fetch.');
+            return;
+        }
+        console.log('[SUPABASE] Iniciando sincronización de datos...');
         try {
             const hace30Dias = new Date();
             hace30Dias.setDate(hace30Dias.getDate() - 30);
 
             const [newsRes, memberRes, asistRes, actionsRes] = await Promise.all([
-                supabase.from('noticias').select('*').eq('activa', true).order('created_at', { ascending: false }),
+                supabase.from('noticias').select('*').eq('activa', true).order('orden', { ascending: true }),
                 supabase.from('miembros').select('*').eq('id', memberId).single(),
                 supabase.from('asistencias').select('*').eq('miembro_id', memberId)
                     .gte('fecha', hace30Dias.toISOString().split('T')[0])
@@ -371,25 +433,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 supabase.from('configuracion').select('*').eq('clave', 'home_actions').maybeSingle(),
             ]);
 
+            setIsOffline(false);
+
             if (newsRes.data) {
                 setNoticiasSupabase(newsRes.data);
                 AsyncStorage.setItem('cache_noticias', JSON.stringify(newsRes.data));
+                console.log(`[SUPABASE] ${newsRes.data.length} noticias actualizadas.`);
             }
             if (memberRes.data) {
                 const m = memberRes.data;
                 setNombre(m.nombre); setApellido(m.apellido); setFotoUrl(m.foto_url);
                 setFechaNacimiento(m.fecha_nacimiento); setZona(m.zona);
                 setEsServidor(m.es_servidor || false); setEsAdmin(m.es_admin || false);
+
+                // Cachear datos de perfil
+                AsyncStorage.multiSet([
+                    ['nombre', m.nombre || ''],
+                    ['apellido', m.apellido || ''],
+                    ['foto_url', m.foto_url || ''],
+                    ['fecha_nacimiento', m.fecha_nacimiento || ''],
+                    ['zona', m.zona || ''],
+                    ['es_servidor', String(m.es_servidor || false)],
+                    ['es_admin', String(m.es_admin || false)],
+                ]);
+                console.log('[SUPABASE] Perfil de usuario (Supabase) actualizado.');
             }
             if (asistRes.data) {
                 setRachaUsuario(asistRes.data.length);
                 setAsistenciasDetalle(asistRes.data);
+                AsyncStorage.setItem('racha_usuario', String(asistRes.data.length));
+                AsyncStorage.setItem('cache_asistencias_detalle', JSON.stringify(asistRes.data));
+                console.log(`[SUPABASE] Racha del usuario: ${asistRes.data.length} asistencias.`);
             }
             if (actionsRes?.data?.valor) {
                 setHomeActions(actionsRes.data.valor);
                 AsyncStorage.setItem('cache_home_actions', JSON.stringify(actionsRes.data.valor));
+                console.log('[SUPABASE] Acciones del Home actualizadas.');
             }
-        } catch (e) { console.error('Error refreshing Supabase:', e); }
+            console.log('[SUPABASE] Sincronización finalizada exitosamente.');
+        } catch (e) {
+            console.error('[SUPABASE] ERROR crítico al sincronizar con Supabase:', e);
+            setIsOffline(true);
+        }
     }, [memberId]);
 
     /** Refresca TODO: Supabase (paralelo) + YouTube (con TTL) */
@@ -436,7 +521,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             currentScreen, setCurrentScreen, logout, deleteAccount, login, loginWithBiometrics, refreshData,
             isCurrentlyLive, liveVideoUrl, esServidor, esAdmin, notificationInbox, addNotificationToInbox,
             unreadCount, markNotificationRead, markAllRead,
-            homeActions
+            homeActions,
+            isOffline
         }}>
             {children}
         </AppContext.Provider>

@@ -1,8 +1,10 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { Image as ExpoImage } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Skeleton } from '../ui/Skeleton';
 
 const { width } = Dimensions.get('window');
 const BLUR_HASH = 'LEHV6nWB2yk8pyo0adRj00WBnq%M';
@@ -21,7 +23,7 @@ const NewsCarousel: React.FC<NewsCarouselProps> = React.memo(({ data, onPress })
         if (data.length <= 1) return;
         autoPlayRef.current = setInterval(() => {
             setActiveSlide(prev => {
-                const next = (prev + 1) % data.length;
+                const next = (prev - 1 + data.length) % data.length;
                 flatListRef.current?.scrollToIndex({ index: next, animated: true });
                 return next;
             });
@@ -45,7 +47,11 @@ const NewsCarousel: React.FC<NewsCarouselProps> = React.memo(({ data, onPress })
                     placeholder={BLUR_HASH}
                     transition={300}
                 />
-                <BlurView intensity={35} tint="dark" style={styles.slideInfoContainer}>
+                <LinearGradient
+                    colors={['transparent', 'transparent', 'rgba(0, 0, 0, 0.8)']}
+                    style={StyleSheet.absoluteFill}
+                />
+                <BlurView intensity={15} tint="dark" style={styles.slideInfoContainer}>
                     <View style={styles.infoTopRow}>
                         {item.isLive ? (
                             <View style={styles.newsLiveTag}>
@@ -67,7 +73,15 @@ const NewsCarousel: React.FC<NewsCarouselProps> = React.memo(({ data, onPress })
         </TouchableOpacity>
     ), [onPress]);
 
-    if (data.length === 0) return null;
+    if (data.length === 0) {
+        return (
+            <View style={styles.carouselContainer}>
+                <View style={styles.skeletonSlide}>
+                    <Skeleton height={230} borderRadius={30} />
+                </View>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.carouselContainer}>
@@ -98,11 +112,12 @@ const NewsCarousel: React.FC<NewsCarouselProps> = React.memo(({ data, onPress })
 });
 
 const styles = StyleSheet.create({
-    carouselContainer: { marginBottom: -10, position: 'relative' },
+    carouselContainer: { marginTop: 15, marginBottom: 15, position: 'relative' },
+    skeletonSlide: { paddingHorizontal: 20 },
     slide: { width: width, paddingHorizontal: 20 },
-    slideInner: { height: 260, borderRadius: 30, overflow: 'hidden', backgroundColor: '#111' },
+    slideInner: { height: 230, borderRadius: 30, overflow: 'hidden', backgroundColor: '#020617' },
     slideImage: { width: '100%', height: '100%' },
-    slideInfoContainer: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 50 },
+    slideInfoContainer: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 25, borderBottomLeftRadius: 30, borderBottomRightRadius: 30 },
     infoTopRow: { marginBottom: 10 },
     videoIndicator: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1.5, borderColor: '#c5ff00', shadowColor: '#c5ff00', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.2, shadowRadius: 3, elevation: 4 },
     indicatorPlayCircle: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#c5ff00', justifyContent: 'center', alignItems: 'center', marginRight: 10, shadowColor: '#c5ff00', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.4, shadowRadius: 3, elevation: 6 },

@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useEffect, useRef } from 'react';
 import {
@@ -58,8 +59,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
         const pulse = Animated.loop(
             Animated.sequence([
-                Animated.timing(pulseAnim, { toValue: biometricActive ? 1.1 : 1.04, duration: 1000, useNativeDriver: true }),
-                Animated.timing(pulseAnim, { toValue: 1, duration: 1000, useNativeDriver: true }),
+                Animated.timing(pulseAnim, { toValue: biometricActive ? 1.1 : 1.04, duration: 1000, useNativeDriver: false }),
+                Animated.timing(pulseAnim, { toValue: 1, duration: 1000, useNativeDriver: false }),
             ])
         );
         const glow = Animated.loop(
@@ -97,6 +98,20 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
     return (
         <View style={styles.background}>
+            <LinearGradient colors={['#010A2A', '#020205']} style={StyleSheet.absoluteFill} />
+
+            {/* Mesh gradient effect - Top Left Blue */}
+            <View style={{ position: 'absolute', top: -100, left: -50, width: 400, height: 400, borderRadius: 200, backgroundColor: 'rgba(37, 99, 235, 0.12)' }} />
+
+            {/* Mesh gradient effect - Middle Right Purple */}
+            <View style={{ position: 'absolute', top: '25%', right: -100, width: 350, height: 350, borderRadius: 175, backgroundColor: 'rgba(147, 51, 234, 0.08)' }} />
+
+            {/* Mesh gradient effect - Bottom Left Cyan */}
+            <View style={{ position: 'absolute', bottom: -50, left: -100, width: 300, height: 300, borderRadius: 150, backgroundColor: 'rgba(6, 182, 212, 0.08)' }} />
+
+            {/* Mesh gradient effect - Bottom Right LimeHighlight */}
+            <View style={{ position: 'absolute', bottom: -100, right: -100, width: 300, height: 300, borderRadius: 150, backgroundColor: 'rgba(197, 255, 0, 0.04)' }} />
+
             <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -200,12 +215,12 @@ const styles = StyleSheet.create({
     keyboardView: { flex: 1, justifyContent: 'center', paddingHorizontal: 40 },
 
     loginCard: {
-        backgroundColor: '#121212',
+        backgroundColor: 'rgba(18, 18, 18, 0.65)',
         borderRadius: 30,
         paddingVertical: 35,
         paddingHorizontal: 25,
         borderWidth: 1,
-        borderColor: '#1a1a1a',
+        borderColor: 'rgba(255, 255, 255, 0.06)',
     },
 
     header: { alignItems: 'center', marginBottom: 25 },

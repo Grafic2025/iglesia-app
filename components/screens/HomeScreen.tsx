@@ -1,5 +1,6 @@
 import { FontAwesome, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Animated, Linking, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useApp } from '../../context/AppContext';
@@ -103,9 +104,23 @@ const HomeScreen = ({ navigateTo, setVideoSeleccionado, setModalVideoVisible, se
     if (!nombre) return null;
 
     return (
-        <>
+        <View style={styles.container}>
+            <LinearGradient colors={['#010A2A', '#020205']} style={StyleSheet.absoluteFill} />
+
+            {/* Mesh gradient - Top Left Blue */}
+            <View style={{ position: 'absolute', top: -100, left: -50, width: 400, height: 400, borderRadius: 200, backgroundColor: 'rgba(37, 99, 235, 0.15)' }} />
+
+            {/* Mesh gradient - Middle Right Purple */}
+            <View style={{ position: 'absolute', top: '25%', right: -100, width: 350, height: 350, borderRadius: 175, backgroundColor: 'rgba(147, 51, 234, 0.1)' }} />
+
+            {/* Mesh gradient - Bottom Left Deep Navy */}
+            <View style={{ position: 'absolute', bottom: '20%', left: -80, width: 300, height: 300, borderRadius: 150, backgroundColor: 'rgba(30, 58, 138, 0.08)' }} />
+
+            {/* Mesh gradient - Bottom Center Cyan/Teal */}
+            <View style={{ position: 'absolute', bottom: -50, left: 10, width: 400, height: 250, borderRadius: 125, backgroundColor: 'rgba(6, 182, 212, 0.06)' }} />
+
             <ScrollView
-                style={styles.container}
+                style={{ flex: 1 }}
                 contentContainerStyle={{ paddingBottom: 100 }}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#c5ff00" />}
             >
@@ -207,7 +222,7 @@ const HomeScreen = ({ navigateTo, setVideoSeleccionado, setModalVideoVisible, se
                 </View>
             </ScrollView>
             <IdsBotFab />
-        </>
+        </View>
     );
 };
 

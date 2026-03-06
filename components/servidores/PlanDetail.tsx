@@ -94,7 +94,7 @@ const PlanDetail: React.FC<PlanDetailProps> = ({ plan, canciones, memberPhotos, 
             <Text style={styles.sectionLabel}>CANCIONERO</Text>
             {canciones.length === 0 ? (
                 <View style={styles.noSongsBox}>
-                    <MaterialCommunityIcons name="music-off" size={32} color="#151515" />
+                    <MaterialCommunityIcons name="music-off" size={32} color="#555" />
                     <Text style={styles.noSongsText}>Aún no se asignaron canciones.</Text>
                 </View>
             ) : (
@@ -137,8 +137,8 @@ const PlanDetail: React.FC<PlanDetailProps> = ({ plan, canciones, memberPhotos, 
 const styles = StyleSheet.create({
     notesSection: { paddingHorizontal: 20, marginBottom: 30 },
     notesCard: {
-        backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: 28,
-        padding: 24, borderWidth: 1, borderColor: '#151515',
+        backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 28,
+        padding: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
         overflow: 'hidden'
     },
     notesText: {
@@ -146,13 +146,13 @@ const styles = StyleSheet.create({
         lineHeight: 24, fontStyle: 'italic', paddingLeft: 10
     },
     sectionLabel: {
-        color: '#333', fontSize: 11, fontFamily: 'Montserrat_900Black',
+        color: '#999', fontSize: 11, fontFamily: 'Montserrat_900Black',
         letterSpacing: 2, marginLeft: 22, marginBottom: 15
     },
     teamGrid: { paddingHorizontal: 20, marginBottom: 30 },
     categoryBlock: {
-        marginBottom: 20, backgroundColor: '#0a0a0a', borderRadius: 28,
-        padding: 20, borderWidth: 1, borderColor: '#151515'
+        marginBottom: 20, backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: 28,
+        padding: 20, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.06)'
     },
     categoryHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 18 },
     catIconBox: {
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     memberRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12 },
     photoContainer: {
         width: 42, height: 42, borderRadius: 14,
-        overflow: 'hidden', backgroundColor: '#111',
+        overflow: 'hidden', backgroundColor: 'rgba(0,0,0,0.3)',
         borderWidth: 1.5
     },
     miniAvatar: { width: '100%', height: '100%' },
@@ -182,26 +182,26 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.5, shadowRadius: 5
     },
     songItem: {
-        flexDirection: 'row', alignItems: 'center', backgroundColor: '#0a0a0a',
+        flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.03)',
         marginHorizontal: 20, padding: 18, borderRadius: 28, marginBottom: 14,
-        borderWidth: 1, borderColor: '#151515'
+        borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.06)'
     },
     songNumberBox: {
         width: 44, height: 44, borderRadius: 14,
-        backgroundColor: '#111', justifyContent: 'center', alignItems: 'center',
-        borderWidth: 1, borderColor: '#1a1a1a', marginRight: 18
+        backgroundColor: 'rgba(255, 255, 255, 0.05)', justifyContent: 'center', alignItems: 'center',
+        borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)', marginRight: 18
     },
     songNumberText: { color: '#c5ff00', fontSize: 18, fontFamily: 'Montserrat_900Black' },
     songTitleText: { color: '#fff', fontSize: 16, fontFamily: 'Montserrat_700Bold' },
-    songSubText: { color: '#555', fontSize: 12, fontFamily: 'Inter_400Regular', marginTop: 3 },
+    songSubText: { color: '#888', fontSize: 12, fontFamily: 'Inter_400Regular', marginTop: 3 },
     resourceRow: { flexDirection: 'row', gap: 12, marginTop: 15 },
     resBtn: {
         width: 40, height: 40, borderRadius: 12,
         backgroundColor: '#000', justifyContent: 'center', alignItems: 'center',
         borderWidth: 1
     },
-    noSongsBox: { padding: 40, alignItems: 'center', backgroundColor: '#050505', borderRadius: 28, marginHorizontal: 20 },
-    noSongsText: { color: '#333', fontFamily: 'Montserrat_700Bold', fontSize: 13, marginTop: 12 },
+    noSongsBox: { padding: 40, alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.02)', borderRadius: 28, marginHorizontal: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+    noSongsText: { color: '#999', fontFamily: 'Montserrat_700Bold', fontSize: 13, marginTop: 12 },
 });
 
 export default PlanDetail;

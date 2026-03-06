@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Animated, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -74,6 +75,7 @@ const PrayerScreen = ({ navigateTo, cargarPedidos, listaPedidosOracion }: any) =
 
     const handleMeUni = async (pedido: any) => {
         if (joinedPrayers.has(pedido.id)) return;
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => { });
         setLocalCounts(prev => ({ ...prev, [pedido.id]: (prev[pedido.id] ?? pedido.contador_oraciones ?? 0) + 1 }));
         await saveJoined(new Set(joinedPrayers).add(pedido.id));
         try {
@@ -142,10 +144,16 @@ const PrayerScreen = ({ navigateTo, cargarPedidos, listaPedidosOracion }: any) =
     const hayMas = listaFiltrada.length > pagina * PAGE_SIZE;
 
     return (
-        <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+        <View style={styles.mainWrapper}>
+            <LinearGradient colors={['#050B25', '#020205']} style={StyleSheet.absoluteFill} />
+
+            {/* Mesh gradient effects */}
+            <View style={{ position: 'absolute', top: -50, right: -50, width: 300, height: 300, borderRadius: 150, backgroundColor: 'rgba(37, 99, 235, 0.08)' }} />
+            <View style={{ position: 'absolute', bottom: 100, left: -100, width: 400, height: 400, borderRadius: 200, backgroundColor: 'rgba(147, 51, 234, 0.06)' }} />
+
             <ScrollView
                 style={styles.pageScroll}
-                contentContainerStyle={{ paddingBottom: 100 }}
+                contentContainerStyle={{ paddingBottom: 100, paddingTop: insets.top }}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#c5ff00" />}
             >
                 <View style={styles.topNav}>
@@ -290,40 +298,74 @@ const PrayerScreen = ({ navigateTo, cargarPedidos, listaPedidosOracion }: any) =
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#000' },
+    mainWrapper: { flex: 1, backgroundColor: '#020205' },
     pageScroll: { flex: 1 },
     topNav: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, marginBottom: 25 },
-    backButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.8)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 22, borderWidth: 1, borderColor: '#333' },
-    backText: { color: '#c5ff00', fontSize: 11, fontWeight: '900', letterSpacing: 1, marginLeft: 5 },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 22,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.08)'
+    },
+    backText: { color: '#c5ff00', fontSize: 10, fontFamily: 'Montserrat_900Black', letterSpacing: 1.5, marginLeft: 8 },
     topTitles: { marginLeft: 15 },
     topLabel: { color: '#c5ff00', fontSize: 10, fontWeight: '900', letterSpacing: 2 },
     topTitle: { color: '#fff', fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
 
     inputSection: { paddingHorizontal: 20, marginBottom: 30 },
-    inputBlur: { borderRadius: 30, overflow: 'hidden', padding: 20, backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+    inputBlur: {
+        borderRadius: 30,
+        overflow: 'hidden',
+        padding: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.06)'
+    },
     prayerInput: { height: 100, color: '#fff', fontSize: 16, textAlignVertical: 'top', marginBottom: 20 },
     publishBtn: { height: 50, borderRadius: 18, overflow: 'hidden' },
     publishBtnGradient: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
     publishBtnText: { color: '#000', fontWeight: '900', fontSize: 13, letterSpacing: 1 },
 
     filterRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
-    sectionTitle: { color: '#444', fontSize: 12, fontWeight: '900', letterSpacing: 1 },
-    filterBtn: { paddingHorizontal: 15, paddingVertical: 8, borderRadius: 12, backgroundColor: '#0a0a0a', borderWidth: 1, borderColor: '#111' },
+    sectionTitle: { color: '#919191', fontSize: 12, fontWeight: '900', letterSpacing: 1 },
+    filterBtn: {
+        paddingHorizontal: 18,
+        paddingVertical: 10,
+        borderRadius: 14,
+        backgroundColor: 'rgba(255, 255, 255, 0.04)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.06)'
+    },
     filterBtnActive: { backgroundColor: '#c5ff00', borderColor: '#c5ff00' },
-    filterBtnText: { color: '#666', fontSize: 10, fontWeight: '900' },
+    filterBtnText: { color: '#888', fontSize: 10, fontFamily: 'Montserrat_900Black', letterSpacing: 1 },
 
     emptyContainer: { alignItems: 'center', marginTop: 50, paddingHorizontal: 40 },
     emptyIconCircle: { width: 120, height: 120, borderRadius: 60, backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center', borderStyle: 'dashed', borderWidth: 1, borderColor: '#111' },
     emptyTitle: { color: '#fff', fontSize: 20, fontWeight: '900', marginTop: 25 },
-    emptySubtitle: { color: '#444', fontSize: 13, textAlign: 'center', marginTop: 10, lineHeight: 20 },
+    emptySubtitle: { color: '#888', fontSize: 13, textAlign: 'center', marginTop: 10, lineHeight: 20 },
 
     groupSection: { marginBottom: 25 },
     groupHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 15 },
-    groupHeaderText: { color: '#222', fontSize: 10, fontWeight: '900', letterSpacing: 1.5 },
-    groupHeaderLine: { flex: 1, height: 1, backgroundColor: '#0a0a0a', marginLeft: 15 },
+    groupHeaderText: { color: '#777', fontSize: 10.5, fontWeight: '900', letterSpacing: 1.5, opacity: 0.8 },
+    groupHeaderLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginLeft: 15 },
 
-    prayerCard: { marginHorizontal: 20, backgroundColor: '#050505', borderRadius: 28, padding: 20, marginBottom: 15, borderWidth: 1, borderColor: '#111' },
-    prayerCardOwned: { borderColor: '#c5ff0020', backgroundColor: '#070700' },
+    prayerCard: {
+        marginHorizontal: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+        borderRadius: 32,
+        padding: 22,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.05)'
+    },
+    prayerCardOwned: {
+        borderColor: 'rgba(197, 255, 0, 0.2)',
+        backgroundColor: 'rgba(197, 255, 0, 0.02)'
+    },
     cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
     userInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     avatarBox: { width: 40, height: 40, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },

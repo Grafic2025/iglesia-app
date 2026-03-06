@@ -1,5 +1,7 @@
+import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { ActivityIndicator, Animated, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Animated, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Skeleton } from '../components/ui/Skeleton';
 
 import { LoginView } from '../components/auth/LoginView';
 import { GlobalModals } from '../components/modals/GlobalModals';
@@ -12,6 +14,7 @@ import { useBiometricAuth } from '../hooks/useBiometricAuth';
 
 export default function RootScreen() {
   const { isLoggedIn, loading, loginWithBiometrics } = useApp();
+  console.log(`[APP] Renderizando RootScreen (isLoggedIn: ${isLoggedIn}, loading: ${loading})`);
 
   // Mantenemos el hook de biometría en la raíz para evitar que se reinicie al navegar
   const biometric = useBiometricAuth();
@@ -75,8 +78,15 @@ export default function RootScreen() {
   if (loading) {
     return (
       <View style={styles.centerOuter}>
-        <StatusBar barStyle="light-content" backgroundColor="#000" />
-        {showSpinner && <ActivityIndicator size="large" color="#c5ff00" />}
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        {showSpinner && (
+          <View style={{ width: '100%', padding: 20 }}>
+            <Skeleton height={60} borderRadius={16} style={{ marginBottom: 20 }} />
+            <Skeleton height={230} borderRadius={30} style={{ marginBottom: 20 }} />
+            <Skeleton height={100} borderRadius={24} style={{ marginBottom: 20 }} />
+            <Skeleton height={120} borderRadius={24} />
+          </View>
+        )}
       </View>
     );
   }
@@ -84,7 +94,7 @@ export default function RootScreen() {
   // 2. Renderizado condicional Principal
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" translucent />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       {!isLoggedIn ? (
         /* ============ PANTALLA DE LOGIN ============ */
@@ -160,12 +170,12 @@ export default function RootScreen() {
           <VideoModal
             visible={modalVideoVisible}
             video={videoSeleccionado}
-            onClose={() => setModalVideoVisible(false)}
+            onClose={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { }); setModalVideoVisible(false); }}
           />
 
           {scanning && (
             <ScannerModal
-              onClose={() => setScanning(false)}
+              onClose={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { }); setScanning(false); }}
               onBarCodeScanned={handleBarCodeScanned}
             />
           )}

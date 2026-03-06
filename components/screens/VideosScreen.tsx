@@ -2,7 +2,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { FlatList, Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CATEGORIES = [
     { id: '1', title: 'PREDICAS', icon: 'microphone', color: '#A8D500', image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=400' },
@@ -12,8 +13,10 @@ const CATEGORIES = [
 ];
 
 const VideosScreen = ({ navigateTo }: { navigateTo: (s: string) => void }) => {
+    const insets = useSafeAreaInsets();
     return (
-        <View style={styles.container}>
+        <View style={styles.mainWrapper}>
+            <LinearGradient colors={['#010A2A', '#020205']} style={StyleSheet.absoluteFill} />
             <View style={styles.header}>
                 <Image
                     source={{ uri: 'https://images.unsplash.com/photo-1492619375914-88005aa9e8fb?w=800' }}
@@ -23,9 +26,9 @@ const VideosScreen = ({ navigateTo }: { navigateTo: (s: string) => void }) => {
                     colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.9)']}
                     style={StyleSheet.absoluteFill}
                 />
-                <SafeAreaView style={styles.headerSafe}>
+                <View style={[styles.headerSafe, { paddingTop: insets.top }]}>
                     <TouchableOpacity onPress={() => navigateTo('Inicio')} style={styles.backButton}>
-                        <MaterialCommunityIcons name="chevron-left" size={28} color="#c5ff00" />
+                        <MaterialCommunityIcons name="chevron-left" size={24} color="#c5ff00" />
                         <Text style={styles.backText}>VOLVER</Text>
                     </TouchableOpacity>
                     <View style={styles.headerBody}>
@@ -33,7 +36,7 @@ const VideosScreen = ({ navigateTo }: { navigateTo: (s: string) => void }) => {
                         <Text style={styles.headerTitle}>VIDEOTECA</Text>
                         <Text style={styles.headerDesc}>Explora todo el contenido audiovisual de nuestra comunidad.</Text>
                     </View>
-                </SafeAreaView>
+                </View>
             </View>
 
             <FlatList
@@ -67,11 +70,23 @@ const VideosScreen = ({ navigateTo }: { navigateTo: (s: string) => void }) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#000' },
+    mainWrapper: { flex: 1, backgroundColor: '#020205' },
+    container: { flex: 1 },
     header: { height: 280 },
     headerSafe: { flex: 1, paddingHorizontal: 20 },
-    backButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.8)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 22, borderWidth: 1, borderColor: '#333', alignSelf: 'flex-start', marginTop: 10 },
-    backText: { color: '#c5ff00', fontSize: 11, fontWeight: '900', letterSpacing: 1, marginLeft: 5 },
+    backButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 22,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.08)',
+        alignSelf: 'flex-start',
+        marginTop: 10
+    },
+    backText: { color: '#c5ff00', fontSize: 10, fontFamily: 'Montserrat_900Black', letterSpacing: 1.5, marginLeft: 8 },
     headerBody: { marginTop: 'auto', marginBottom: 30 },
     headerLabel: { color: '#c5ff00', fontSize: 11, fontWeight: '900', letterSpacing: 4 },
     headerTitle: { color: '#fff', fontSize: 36, fontWeight: '900', letterSpacing: -1, marginTop: 5 },
