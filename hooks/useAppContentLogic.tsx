@@ -54,6 +54,7 @@ export function useAppContentLogic() {
     asistenciasDetalle,
     unreadCount,
     addNotificationToInbox,
+    setDeepLinkTarget,
   } = useApp();
 
   const [localNombre, setLocalNombre] = useState('');
@@ -96,6 +97,30 @@ export function useAppContentLogic() {
     [screenFadeAnim, isMenuOpen, slideAnim, setCurrentScreen]
   );
 
+  const handleNotificationResponse = useCallback((data: any) => {
+    console.log('[NOTIF-DEEP] Procesando data de notificación:', JSON.stringify(data));
+    if (data?.type === 'service_reminder' || data?.type === 'chat') {
+      if (data?.type === 'chat' && data?.planId) {
+        console.log('[NOTIF-DEEP] Chat detectado, planId:', data.planId);
+        setDeepLinkTarget({ action: 'openChat', planId: data.planId });
+      }
+      navigateTo('Servidores');
+    } else if (data?.type === 'news') {
+      if (data.news) {
+        setNoticiaSeleccionada(data.news);
+        navigateTo('NewsDetail');
+      } else {
+        navigateTo('Inicio');
+      }
+    } else if (data?.type === 'video') {
+      navigateTo('Videos');
+    } else if (data?.type === 'prayer') {
+      navigateTo('Necesito Oración');
+    } else {
+      navigateTo('Notificaciones');
+    }
+  }, [navigateTo, setDeepLinkTarget, setNoticiaSeleccionada]);
+
   useEffect(() => {
     if (isLoggedIn && memberId) {
       // Registro inicial de token
@@ -104,30 +129,26 @@ export function useAppContentLogic() {
       // Manejar notificaciones cuando la app está abierta
       notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
         const { title, body, data } = notification.request.content;
-        addNotificationToInbox({ title, body, image: data?.image });
+        addNotificationToInbox({ title, body, image: data?.image, data });
       });
 
-      // Manejar clic en la notificación
+      // Manejar clic en la notificación (app abierta o en background)
       responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
         const { data } = response.notification.request.content;
+        handleNotificationResponse(data);
+      });
 
-        // --- LÓGICA DE DEEP LINKING ---
-        if (data?.type === 'service_reminder') {
-          navigateTo('Servidores');
-        } else if (data?.type === 'news') {
-          if (data.news) {
-            setNoticiaSeleccionada(data.news);
-            navigateTo('NewsDetail');
-          } else {
-            navigateTo('Inicio');
+      // Capturar la notificación que abrió la app cuando estaba CERRADA
+      Notifications.getLastNotificationResponseAsync().then(response => {
+        if (response) {
+          const { data } = response.notification.request.content;
+          console.log('[NOTIF-DEEP] App abierta desde notificación (cold start):', JSON.stringify(data));
+          // Solo procesar si fue tocada en los últimos 5 segundos (evitar re-procesar viejas)
+          const responseTime = response.notification.date;
+          const now = Date.now();
+          if (now - responseTime < 5000) {
+            handleNotificationResponse(data);
           }
-        } else if (data?.type === 'video') {
-          navigateTo('Videos');
-        } else if (data?.type === 'prayer') {
-          navigateTo('Necesito Oración');
-        } else {
-          // Por defecto, ir al buzón de notificaciones
-          navigateTo('Notificaciones');
         }
       });
 
@@ -142,7 +163,7 @@ export function useAppContentLogic() {
         }
       };
     }
-  }, [isLoggedIn, memberId, addNotificationToInbox, navigateTo]);
+  }, [isLoggedIn, memberId, addNotificationToInbox, handleNotificationResponse]);
 
   useEffect(() => {
     if (!isLoggedIn && !loading) {

@@ -21,7 +21,7 @@ import PlanDetail from '../servidores/PlanDetail';
 // ── COMPONENTE PRINCIPAL ServidoresScreen ─────────────────────────────────────────
 const ServidoresScreen = ({ navigateTo }: any) => {
     const insets = useSafeAreaInsets();
-    const { memberId, nombre, refreshData, esAdmin } = useApp();
+    const { memberId, nombre, refreshData, esAdmin, deepLinkTarget, setDeepLinkTarget } = useApp();
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [plans, setPlans] = useState<any[]>([]);
@@ -89,6 +89,17 @@ const ServidoresScreen = ({ navigateTo }: any) => {
     }, [memberId]);
 
     useEffect(() => { fetchPlans(); fetchBlockouts(); }, [fetchPlans, fetchBlockouts]);
+
+    useEffect(() => {
+        if (deepLinkTarget?.action === 'openChat' && deepLinkTarget.planId && plans.length > 0) {
+            const index = plans.findIndex(p => p.id === deepLinkTarget.planId);
+            if (index !== -1) {
+                handleSwitchPlan(index);
+                setTimeout(() => setShowChatModal(true), 400); // Dar tiempito de renderizado
+            }
+            if (setDeepLinkTarget) setDeepLinkTarget(null);
+        }
+    }, [deepLinkTarget, plans]);
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -439,7 +450,8 @@ const ServidoresScreen = ({ navigateTo }: any) => {
                         onClose={() => setShowChatModal(false)}
                         planId={plan.id}
                         memberId={memberId || ''}
-                        planTitle={plan.notas_generales || 'Plan de Culto'}
+                        planName={new Date(plan.fecha + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                        planTitle={new Date(plan.fecha + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }).replace(',', '')}
                         planDate={new Date(plan.fecha + 'T12:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
                         planTime={plan.horario ? plan.horario.split(',').map((h: any) => h.trim().replace(/HS/gi, '').trim()).sort((a: any, b: any) => { const [ha, ma] = a.split(':').map(Number); const [hb, mb] = b.split(':').map(Number); return (ha * 60 + (ma || 0)) - (hb * 60 + (mb || 0)); }).join(' y ') : '...'}
                         equipoIds={plan.equipo_ids || []}

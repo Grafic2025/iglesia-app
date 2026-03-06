@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
 
     groupSection: { marginBottom: 25 },
     groupHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 15 },
-    groupHeaderText: { color: '#777', fontSize: 10.5, fontWeight: '900', letterSpacing: 1.5, opacity: 0.8 },
+    groupHeaderText: { color: '#aaa', fontSize: 10.5, fontWeight: '900', letterSpacing: 1.5, opacity: 0.9 },
     groupHeaderLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginLeft: 15 },
 
     prayerCard: {
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     prayerContent: { color: '#aaa', fontSize: 15, lineHeight: 24, fontStyle: 'italic', marginVertical: 20, fontWeight: '400' },
     cardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     counterBox: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    counterText: { color: '#333', fontSize: 10, fontWeight: '900', letterSpacing: 1 },
+    counterText: { color: '#aaa', fontSize: 10, fontWeight: '900', letterSpacing: 1 },
     prayBtn: { height: 40, borderRadius: 14, overflow: 'hidden', minWidth: 100 },
     prayBtnDone: { borderWidth: 1, borderColor: '#111' },
     prayBtnGradient: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 15 },

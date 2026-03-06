@@ -196,15 +196,15 @@ const HomeScreen = ({ navigateTo, setVideoSeleccionado, setModalVideoVisible, se
                         </View>
 
                         {/* Columna derecha */}
-                        <View style={styles.footerCol}>
+                        <View style={styles.footerColRight}>
                             <Text style={styles.footerColTitle}>UBICACIÓN & HORARIOS</Text>
                             <Text style={styles.footerInfoLabel}>DIRECCIÓN:</Text>
                             <Text style={styles.footerInfoText}>Constituyentes 950, Morón,{`\n`}Buenos Aires, Argentina.</Text>
                             <Text style={[styles.footerInfoLabel, { marginTop: 12 }]}>PRESENCIAL:</Text>
-                            <Text style={styles.footerInfoText}>Dom. 9, 11 y 20hs</Text>
+                            <Text style={styles.footerInfoText}>Dom. 9, 11 y 19hs</Text>
                             <Text style={[styles.footerInfoLabel, { marginTop: 4, color: '#c5ff00' }]}>YOUTUBE:</Text>
                             <Text style={styles.footerInfoText}>Dom. 11hs</Text>
-                            <Text style={[styles.footerInfoText, { marginTop: 8, color: '#888' }]}>hola@iglesiadelsalvador.com</Text>
+                            <Text style={[styles.footerInfoText, { marginTop: 8 }]}>hola@iglesiadelsalvador.com</Text>
                         </View>
                     </View>
 
@@ -214,21 +214,27 @@ const HomeScreen = ({ navigateTo, setVideoSeleccionado, setModalVideoVisible, se
                         <SocialBtn icon="instagram" color="#E1306C" url="https://instagram.com/iglesiadelsalvador" />
                         <SocialBtn icon="facebook" color="#4267B2" url="https://facebook.com/iglesiadelsalvador" />
                         <SocialBtn icon="youtube-play" color="#FF0000" url="https://youtube.com/@iglesiadelsalvador" />
-                        <SocialBtn icon="twitter" color="#1DA1F2" url="https://twitter.com/iglesiadelsalvador" />
+                        <SocialBtn icon="tiktok" color="#fff" url="https://www.tiktok.com/@idsalvador" is5 />
                     </View>
 
                     {/* Copyright */}
                     <Text style={styles.copyright}>© 2026 IGLESIA DEL SALVADOR. TODOS LOS DERECHOS RESERVADOS.</Text>
                 </View>
             </ScrollView>
-            <IdsBotFab />
+            <IdsBotFab navigateTo={navigateTo} />
         </View>
     );
 };
 
-const SocialBtn = ({ icon, color, url, is5 = false }: any) => (
+const SocialBtn = ({ icon, color, url, is5 = false, isMaterial = false }: any) => (
     <TouchableOpacity style={styles.socialCircle} onPress={() => Linking.openURL(url)}>
-        {is5 ? <FontAwesome5 name={icon} size={18} color={color} /> : <FontAwesome name={icon} size={18} color={color} />}
+        {isMaterial ? (
+            <MaterialCommunityIcons name={icon} size={26} color={color} />
+        ) : is5 ? (
+            <FontAwesome5 name={icon} size={24} color={color} />
+        ) : (
+            <FontAwesome name={icon} size={24} color={color} />
+        )}
     </TouchableOpacity>
 );
 
@@ -236,14 +242,15 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#000' },
     footer: { paddingHorizontal: 24, paddingTop: 36, paddingBottom: 40, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
     footerTop: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 30 },
-    footerCol: { flex: 1, paddingRight: 8 },
+    footerCol: { width: '40%' },
+    footerColRight: { width: '60%', paddingLeft: 20 },
     footerColTitle: { fontFamily: 'Montserrat_900Black', color: '#2563EB', fontSize: 10, letterSpacing: 2, marginBottom: 14 },
-    footerLink: { fontFamily: 'Inter_400Regular', color: '#bbb', fontSize: 14, marginBottom: 10 },
+    footerLink: { fontFamily: 'Inter_400Regular', color: '#bbb', fontSize: 15, marginBottom: 10 },
     footerInfoLabel: { fontFamily: 'Montserrat_700Bold', color: '#fff', fontSize: 10, letterSpacing: 1, marginBottom: 2 },
-    footerInfoText: { fontFamily: 'Inter_400Regular', color: '#888', fontSize: 12, lineHeight: 18, marginBottom: 4 },
-    footerDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.06)', marginBottom: 24 },
+    footerInfoText: { fontFamily: 'Inter_400Regular', color: '#bbb', fontSize: 13, lineHeight: 18, marginBottom: 4 },
+    footerDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.06)', marginVertical: 24 },
     socialRow: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginBottom: 28 },
-    socialCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#0d0d0d', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#1a1a1a' },
+    socialCircle: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#0d0d0d', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#1a1a1a' },
     copyright: { fontFamily: 'Montserrat_500Medium', color: '#fff', fontSize: 11, letterSpacing: 1, textAlign: 'center', opacity: 0.8 },
     toast: { position: 'absolute', top: 20, alignSelf: 'center', backgroundColor: '#c5ff00', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 20, flexDirection: 'row', alignItems: 'center', zIndex: 9999 },
     toastTxt: { fontFamily: 'Montserrat_700Bold', color: '#000', fontSize: 13, marginLeft: 10 },

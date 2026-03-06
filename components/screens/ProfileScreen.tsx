@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
 
     levelBadge: { paddingHorizontal: 15, paddingVertical: 6, borderRadius: 20, marginTop: 8, borderWidth: 1 },
     levelText: { fontSize: 11, fontWeight: '900', letterSpacing: 0.5 },
-    noLevelText: { color: '#444', fontSize: 12, marginTop: 8, fontWeight: '700' },
+    noLevelText: { color: '#888', fontSize: 12, marginTop: 8, fontWeight: '700' },
 
     editButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#c5ff00', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, marginTop: 20 },
     editButtonText: { color: '#000', fontWeight: '900', fontSize: 12, marginLeft: 8 },
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     historyInfo: { flex: 1 },
     historyDate: { color: '#fff', fontSize: 15, fontWeight: '800' },
     historyTime: { color: '#888', fontSize: 11, fontWeight: '600' },
-    emptyText: { color: '#777', textAlign: 'center', marginTop: 10 },
+    emptyText: { color: '#aaa', textAlign: 'center', marginTop: 10 },
 
     sharePoster: { width: 400, backgroundColor: '#000', padding: 40, alignItems: 'center', borderWidth: 10, borderColor: '#c5ff00' },
     sharePosterHeader: { alignItems: 'center', marginBottom: 30 },
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
     modalContent: { width: '100%', backgroundColor: '#111', borderRadius: 35, padding: 30, borderWidth: 1, borderColor: '#222' },
     modalTitle: { color: '#fff', fontSize: 22, fontWeight: '900', marginBottom: 25, letterSpacing: 1 },
     inputGroup: { marginBottom: 18 },
-    inputLabel: { color: '#444', fontSize: 10, fontWeight: '900', marginBottom: 8, marginLeft: 5 },
+    inputLabel: { color: '#aaa', fontSize: 10, fontWeight: '900', marginBottom: 8, marginLeft: 5 },
     input: { backgroundColor: '#1a1a1a', padding: 16, borderRadius: 18, color: '#fff', fontSize: 16, borderWidth: 1, borderColor: '#222' },
     modalActions: { flexDirection: 'row', gap: 10, marginTop: 10 },
     closeBtn: { flex: 1, height: 55, justifyContent: 'center', alignItems: 'center' },

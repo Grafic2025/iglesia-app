@@ -99,7 +99,7 @@ const NotesScreen = ({ navigateTo }: any) => {
             <View style={{ position: 'absolute', top: -100, left: -50, width: 300, height: 300, borderRadius: 150, backgroundColor: 'rgba(37, 99, 235, 0.1)' }} />
             <View style={{ position: 'absolute', bottom: 100, right: -100, width: 400, height: 400, borderRadius: 200, backgroundColor: 'rgba(147, 51, 234, 0.08)' }} />
 
-            <View style={[styles.header, { paddingTop: Math.max(insets.top, 16) }]}>
+            <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
                 <TouchableOpacity onPress={() => navigateTo('Inicio')} style={styles.backButton}>
                     <MaterialCommunityIcons name="chevron-left" size={28} color="#c5ff00" />
                     <Text style={styles.backText}>VOLVER</Text>

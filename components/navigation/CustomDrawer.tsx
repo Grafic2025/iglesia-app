@@ -255,9 +255,7 @@ const styles = StyleSheet.create({
     },
     userSurNameText: {
         color: '#c5ff00',
-        fontSize: 14,
-        fontWeight: '700',
-        opacity: 0.8
+        opacity: 0.95
     },
     drawerPhoto: {
         width: 60,

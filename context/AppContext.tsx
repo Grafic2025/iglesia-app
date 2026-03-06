@@ -34,6 +34,8 @@ export interface AppContextType {
     markAllRead: () => void;
     homeActions: any[];
     isOffline: boolean;
+    deepLinkTarget: any;
+    setDeepLinkTarget: (target: any) => void;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -64,6 +66,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [notificationInbox, setNotificationInbox] = useState<any[]>([]);
     const [homeActions, setHomeActions] = useState<any[]>([]);
     const [isOffline, setIsOffline] = useState(false);
+    const [deepLinkTarget, setDeepLinkTarget] = useState<any>(null);
 
     /**
      * Carga la sesión del usuario y la caché de forma ultra-rápida usando Promise.all.
@@ -132,6 +135,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 const parsed = JSON.parse(cachedAsistencias);
                 if (Array.isArray(parsed)) setAsistenciasDetalle(parsed);
             }
+
+            // Limpiar historial del bot al abrir la app (Cold Start) para que empiece de cero
+            await AsyncStorage.removeItem('ids_bot_session_chat');
 
         } catch (e) {
             console.error("[SESSION] ERROR crítico al cargar sesión:", e);
@@ -522,7 +528,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             isCurrentlyLive, liveVideoUrl, esServidor, esAdmin, notificationInbox, addNotificationToInbox,
             unreadCount, markNotificationRead, markAllRead,
             homeActions,
-            isOffline
+            isOffline, deepLinkTarget, setDeepLinkTarget
         }}>
             {children}
         </AppContext.Provider>

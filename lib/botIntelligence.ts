@@ -1,37 +1,35 @@
 import { supabase } from '../lib/supabase';
 
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_KEY;
+// Usando la versión solicitada (2.5 flash es probable referencia a 2.0 actual)
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
 /**
  * Compila toda la información estática y dinámica de la Iglesia para darle contexto al bot.
  */
 export const getChurchContext = async (userData: any) => {
-    // 1. Información Estática
     const infoEstatica = {
         nombre: "Iglesia del Salvador",
         ubicacion: "Constituyentes 950, Morón, Buenos Aires, Argentina",
         horarios: {
-            presencial: "Domingos a las 9:00hs, 11:00hs y 20:00hs",
-            online: "Domingos a las 11:00hs vía YouTube",
-        },
-        redes_sociales: {
-            instagram: "https://instagram.com/iglesiadelsalvador",
-            facebook: "https://facebook.com/iglesiadelsalvador",
-            youtube: "https://youtube.com/@iglesiadelsalvador",
-            whatsapp_canal: "https://whatsapp.com/channel/0029VaT0L9rEgGfRVvKIZ534"
+            presencial: "Domingos a las 9:00, 11:00 y 19:00 hs",
+            online: "Domingos a las 11:00 hs vía YouTube",
         },
         servicios: [
-            "Agenda de eventos",
-            "Lectura de la Biblia",
-            "Pedidos de oración",
-            "Bautismos",
-            "Capacitaciones",
-            "Grupos de comunidad (CGE)",
-            "Donaciones / Ofrendas",
-            "Asistencia a necesitados"
+            { titulo: 'Agenda de Eventos', pantalla: 'Agenda', descripcion: 'Calendario de actividades y reuniones.' },
+            { titulo: 'Biblia Online', pantalla: 'https://www.bible.com/es', descripcion: 'Leer la Biblia en varios idiomas.' },
+            { titulo: 'Quiero Ayudar', pantalla: 'Quiero Ayudar', descripcion: 'Sumarse a proyectos sociales (Hospitales, Comedores).' },
+            { titulo: 'Necesito Ayuda', pantalla: 'Necesito Ayuda', descripcion: 'Solicitar contención o ayuda material.' },
+            { titulo: 'Bautismos', pantalla: 'Quiero Bautizarme', descripcion: 'Información y registros para bautizarse.' },
+            { titulo: 'Capacitaciones', pantalla: 'Quiero Capacitarme', descripcion: 'Discipulado y cursos bíblicos.' },
+            { titulo: 'Soy Nuevo', pantalla: 'Soy Nuevo', descripcion: 'Información básica para invitados.' },
+            { titulo: 'Pedidos de Oración', pantalla: 'Necesito Oración', descripcion: 'Enviar motivos para que oremos por ti.' },
+            { titulo: 'Grupos de Conexión (CGE)', pantalla: 'Sumarme a un Grupo', descripcion: 'Grupos pequeños por edades: Jóvenes, Adultos, Matrimonios.' },
+            { titulo: 'Transmisión Online', pantalla: 'YouTube', descripcion: 'Vivos de los domingos 11hs.' },
         ]
     };
 
-    // 2. Información Dinámica (de la base de datos)
-    let noticiasRecientes: { titulo: string; descripcion: string }[] = [];
+    let noticiasRecientes: string[] = [];
     try {
         const { data } = await supabase
             .from('noticias')
@@ -39,92 +37,104 @@ export const getChurchContext = async (userData: any) => {
             .eq('activa', true)
             .order('created_at', { ascending: false })
             .limit(3);
-        noticiasRecientes = data || [];
-    } catch (e) {
-        console.log("Error buscando noticias para el bot:", e);
-    }
+        noticiasRecientes = (data || []).map(n => `- ${n.titulo}: ${n.descripcion}`);
+    } catch (e) { }
 
-    // 3. Construcción del Prompt del Sistema
-    return `
-Eres IDS (Inteligencia Del Salvador), el asistente virtual oficial de la Iglesia del Salvador. 
-Tu objetivo es ayudar a los miembros y visitantes con información precisa, amable y espiritual.
+    // Resumen de asistencias si están disponibles
+    const totalAsistencias = userData.asistencias?.length || 0;
+    const racha = userData.rachaUsuario || 0;
+    const ultimasAsistencias = (userData.asistencias || []).slice(0, 5).map((a: any) => a.fecha).join(', ');
 
-INFORMACIÓN DE LA IGLESIA:
-- Dirección: ${infoEstatica.ubicacion}
-- Reuniones: ${infoEstatica.horarios.presencial}
-- Transmisiones: ${infoEstatica.horarios.online}
-- Redes: Instagram ${infoEstatica.redes_sociales.instagram}, YouTube ${infoEstatica.redes_sociales.youtube}.
+    return `Eres IDS (Inteligencia Del Salvador), el asistente virtual oficial de la Iglesia del Salvador. Tu objetivo es ayudar a los miembros y visitantes con información precisa, amable y espiritual.
+
+INFORMACIÓN CLAVE DE LA IGLESIA:
+- Ubicación: ${infoEstatica.ubicacion}
+- Reuniones: ${infoEstatica.horarios.presencial} (Online: ${infoEstatica.horarios.online})
+
+SERVICIOS DISPONIBLES (Sugiere botones para estos IDs de pantalla):
+${infoEstatica.servicios.map(s => `- ${s.titulo}: ID "${s.pantalla}"`).join('\n')}
 
 NOTICIAS ACTUALES:
-${noticiasRecientes.map(n => `- ${n.titulo}: ${n.descripcion}`).join('\n')}
+${noticiasRecientes.join('\n')}
 
-PERFIL DEL USUARIO QUE TE HABLA:
+INFORMACIÓN PERSONAL DEL USUARIO:
 - Nombre: ${userData.nombre} ${userData.apellido}
 - Rol: ${userData.esAdmin ? 'Administrador' : userData.esServidor ? 'Servidor' : 'Miembro'}
+- Mis Asistencias (últimos 30 días): ${totalAsistencias} veces.
+- Mi Racha actual: ${racha} domingos seguidos.
+- Últimas fechas presentes: ${ultimasAsistencias || 'Sin registros recientes'}.
+- Mis próximos servicios (Días que sirvo): 
+${(userData.servicios || []).map((s: any) => `  * ${s.fecha}: ${s.horario} (Rol: ${s.equipo_ids?.find((e: any) => e.miembro_id === userData.memberId)?.rol || 'Servidor'})`).join('\n') || '  * No tienes servicios programados próximamente.'}
 
-INSTRUCCIONES:
-1. Responde siempre de forma servicial y cristiana.
-2. Si te preguntan algo que no sabes, invita al usuario a acercarse el domingo o escribir a hola@iglesiadelsalvador.com.
-3. Sé breve y directo, pero cálido.
-4. Usa emojis de forma moderada (🙏, ✨, 🙌).
-5. Manten el saludo inicial: "¡Hola! Soy IDS, la Inteligencia Del Salvador. ¿En qué puedo ayudarte hoy?".
-`;
+INSTRUCCIÓN TÉCNICA CRÍTICA:
+1. Responde de forma cálida, breve y cristiana.
+2. Si el usuario pregunta por sus asistencias, responde usando los datos de "INFORMACIÓN PERSONAL" proporcionados arriba.
+3. SI LA CONSULTA se relaciona con un servicio, ofrece el botón de acción correspondiente.
+4. SIEMPRE responde en formato JSON puro.
+Ejemplo: {"text": "Tu mensaje de voz cristiana", "action": {"label": "IR A [SECCIÓN]", "screen": "ID exacto"} }
+IMPORTANTE: Si no hay un servicio relacionado, simplemente no incluyas el campo "action". No incluyas nada fuera del JSON.`;
 };
 
 /**
- * Lógica del Bot 100% LOCAL y DINÁMICO.
- * No usa APIs externas, solo tu base de datos y la información de la app.
- * A prueba de errores y ultra-rápido.
+ * Lógica del Bot potenciada por Gemini con MEMORIA REAL y REPARACIÓN DE JSON.
  */
-export const askIdsBot = async (question: string, context: string) => {
-    console.log("IDS Core procesando localmente:", question);
-    const q = question.toLowerCase();
-
-    // --- NIVEL 1: RESPUESTAS DE INFORMACIÓN FIJA ---
-    if (q.includes("hola") || q.includes("buen")) {
-        return "¡Hola! Soy IDS, el asistente de la Iglesia del Salvador. 🙏 ¿En qué puedo ayudarte hoy?";
+export const askIdsBot = async (question: string, context: string, history: any[] = []) => {
+    if (!GEMINI_API_KEY) {
+        return { text: "Mi cerebro digital necesita su API KEY para activarse. Por favor, verifica el archivo .env. 🙏" };
     }
 
-    if (q.includes("horario") || q.includes("reunion") || q.includes("reunión") || q.includes("cuándo") || q.includes("hora")) {
-        return "¡Te esperamos! 🙌 Nuestras reuniones presenciales son los Domingos a las 9:00, 11:00 y 20:00 hs. También transmitimos por YouTube a las 11:00 hs.";
-    }
-
-    if (q.includes("dirección") || q.includes("donde") || q.includes("dónde") || q.includes("ubicacion") || q.includes("queda")) {
-        return "Estamos en Constituyentes 950, Morón. 📍 ¡Te esperamos!";
-    }
-
-    // --- NIVEL 2: LECTURA DINÁMICA DE NOTICIAS ---
-    if (q.includes("noticia") || q.includes("pasa") || q.includes("novedad")) {
-        const lineas = context.split('\n');
-        const noticias = lineas.filter(l => l.startsWith('- ')).slice(0, 3);
-        if (noticias.length > 0) {
-            return `Lo último en la iglesia: \n\n${noticias.join('\n')}\n\nRevisá la sección de Noticias para más detalles. ✨`;
-        }
-    }
-
-    // --- NIVEL 3: CEREBRO DINÁMICO (Tus propias respuestas en Supabase) ---
     try {
-        // Busca en tu tabla de cerebro si hay una palabra clave que coincida
-        const { data: conocimiento } = await supabase
-            .from('ids_bot_cerebro')
-            .select('respuesta')
-            .textSearch('palabras_clave', q.split(' ').join(' | '))
-            .limit(1)
-            .maybeSingle();
+        // Filtrar mensajes vacíos y mapear roles
+        const chatHistory = history.map(msg => ({
+            role: msg.sender === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.text || "" }]
+        })).filter(h => h.parts[0].text);
 
-        if (conocimiento?.respuesta) {
-            return conocimiento.respuesta;
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [
+                    { role: 'user', parts: [{ text: context }] },
+                    { role: 'model', parts: [{ text: "Entendido. Soy IDS y estoy listo para acompañar a la congregación con sabiduría y amor. Conozco los datos de mi iglesia y del usuario." }] },
+                    ...chatHistory,
+                    { role: 'user', parts: [{ text: question }] }
+                ],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 600,
+                }
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            return { text: `Hubo un inconveniente celestial: ${data.error.message}. Por favor, vuelve a intentar en unos segundos. 🙏` };
         }
-    } catch (e) {
-        console.log("Error consultando cerebro local:", e);
+
+        const candidate = data.candidates?.[0];
+        const rawText = candidate?.content?.parts?.[0]?.text;
+
+        if (rawText) {
+            try {
+                // Limpieza agresiva de JSON (Gemini a veces pone ```json ... ```)
+                const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+                const cleanJson = jsonMatch ? jsonMatch[0] : rawText;
+                return JSON.parse(cleanJson);
+            } catch (e) {
+                // Si no es JSON, devolvemos el texto puro
+                return { text: rawText.replace(/\{.*\}/g, '').trim() || rawText };
+            }
+        }
+
+        if (candidate?.finishReason) {
+            return { text: "Lo siento, mi programación espiritual tiene límites de seguridad para esta consulta. ¡Bendiciones! ✨" };
+        }
+
+    } catch (e: any) {
+        return { text: "Mi red se ha distraído un momento... ¡Intentémoslo de nuevo! 🙏" };
     }
 
-    // --- NIVEL 4: REGISTRO DE LO QUE NO SABE ---
-    try {
-        await supabase
-            .from('ids_bot_aprendizaje')
-            .insert([{ pregunta: question, fecha: new Date().toISOString() }]);
-    } catch (e) { }
-
-    return "¡Qué buena pregunta! ✨ Todavía no tengo esa información exacta, pero ya la anoté para que los líderes me enseñen la respuesta. Por ahora, consultá en el stand de Informes el domingo. ¡Bendiciones!";
+    return { text: "¡Hola! Estoy terminando de procesar tu consulta. Si no te respondo algo exacto, te espero el domingo en el stand de Informes. 🙌" };
 };

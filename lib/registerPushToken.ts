@@ -63,7 +63,7 @@ export async function registerForPushNotifications(memberId: string | null) {
 }
 
 // 2. FUNCIÓN PARA ENVIAR NOTIFICACIONES DINÁMICAS
-export async function sendPushNotification(expoPushToken: string, title: string, body: string, mediaUrl: string | null = null) {
+export async function sendPushNotification(expoPushToken: string, title: string, body: string, mediaUrl: string | null = null, extraData: any = {}) {
   let finalImage = mediaUrl;
 
   // 1. Lógica para detectar link de YouTube y extraer la miniatura
@@ -87,7 +87,7 @@ export async function sendPushNotification(expoPushToken: string, title: string,
     mutableContent: true,
     channelId: 'default',
     priority: 'high',
-    data: { title, body },
+    data: { title, body, ...extraData },
   };
 
   // 3. Si hay imagen (sea de YouTube o link directo), la adjuntamos

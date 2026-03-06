@@ -23,7 +23,7 @@ const getRelativeTime = (dateStr: string): string => {
 
 const NotificationInbox = ({ navigateTo }: any) => {
     const insets = useSafeAreaInsets();
-    const { notificationInbox, markNotificationRead, markAllRead, unreadCount, refreshData } = useApp();
+    const { notificationInbox, markNotificationRead, markAllRead, unreadCount, refreshData, setDeepLinkTarget } = useApp();
     const [refreshing, setRefreshing] = useState(false);
     const [fadeAnim] = useState(new Animated.Value(0));
 
@@ -41,6 +41,30 @@ const NotificationInbox = ({ navigateTo }: any) => {
         setRefreshing(false);
     };
 
+    const handleNotifPress = (item: any) => {
+        // Marcar como leída
+        if (item.id) markNotificationRead(item.id.toString());
+
+        // Navegar según el tipo de notificación
+        const data = item.data;
+        if (!data?.type) return; // Sin tipo = solo marcar leída
+
+        if (data.type === 'chat') {
+            if (data.planId) {
+                setDeepLinkTarget({ action: 'openChat', planId: data.planId });
+            }
+            navigateTo('Servidores');
+        } else if (data.type === 'service_reminder') {
+            navigateTo('Servidores');
+        } else if (data.type === 'news') {
+            navigateTo('Inicio');
+        } else if (data.type === 'video') {
+            navigateTo('Videos');
+        } else if (data.type === 'prayer') {
+            navigateTo('Necesito Oración');
+        }
+    };
+
     return (
         <View style={styles.mainWrapper}>
             <LinearGradient colors={['#050B25', '#020205']} style={StyleSheet.absoluteFill} />
@@ -49,7 +73,7 @@ const NotificationInbox = ({ navigateTo }: any) => {
             <View style={{ position: 'absolute', top: -50, left: -50, width: 250, height: 250, borderRadius: 125, backgroundColor: 'rgba(37, 99, 235, 0.08)' }} />
             <View style={{ position: 'absolute', bottom: 100, right: -50, width: 300, height: 300, borderRadius: 150, backgroundColor: 'rgba(147, 51, 234, 0.06)' }} />
 
-            <View style={[styles.headerLayout, { paddingTop: Math.max(insets.top, 16) }]}>
+            <View style={[styles.headerLayout, { paddingTop: insets.top + 10 }]}>
                 <TouchableOpacity onPress={() => navigateTo('Inicio')} style={styles.backButton}>
                     <MaterialCommunityIcons name="chevron-left" size={28} color="#c5ff00" />
                     <Text style={styles.backText}>VOLVER</Text>
@@ -93,7 +117,7 @@ const NotificationInbox = ({ navigateTo }: any) => {
                             <TouchableOpacity
                                 key={item.id || index}
                                 style={[styles.notifItem, !item.read && styles.notifItemUnread]}
-                                onPress={() => item.id && markNotificationRead(item.id.toString())}
+                                onPress={() => handleNotifPress(item)}
                                 activeOpacity={0.8}
                             >
                                 <View style={styles.notifIconBox}>

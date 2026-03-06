@@ -64,7 +64,7 @@ const SupportScreen = ({ navigateTo, type }: { navigateTo: any, type: string }) 
             <View style={{ position: 'absolute', top: -50, right: -50, width: 300, height: 300, borderRadius: 150, backgroundColor: 'rgba(37, 99, 235, 0.08)' }} />
             <View style={{ position: 'absolute', bottom: 100, left: -100, width: 400, height: 400, borderRadius: 200, backgroundColor: 'rgba(147, 51, 234, 0.06)' }} />
 
-            <View style={[styles.headerRow, { paddingTop: Math.max(insets.top, 16) }]}>
+            <View style={[styles.headerRow, { paddingTop: insets.top + 10 }]}>
                 <TouchableOpacity onPress={() => navigateTo('Inicio')} style={styles.backButton}>
                     <MaterialCommunityIcons name="chevron-left" size={28} color="#c5ff00" />
                     <Text style={styles.backText}>VOLVER</Text>
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     radioGroup: { flexDirection: 'row', gap: 10, marginBottom: 25 },
     radioBtn: { flex: 1, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 16, height: 55, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
     radioBtnActive: { backgroundColor: '#c5ff00', borderColor: '#c5ff00' },
-    radioText: { color: '#888', fontSize: 14, fontWeight: '700' },
+    radioText: { color: '#bbb', fontSize: 14, fontWeight: '700' },
     radioTextActive: { color: '#000', fontWeight: '900' },
     mainSubmitBtn: { backgroundColor: '#c5ff00', height: 65, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginTop: 10, shadowColor: '#c5ff00', shadowOpacity: 0.2, shadowRadius: 15, elevation: 10 },
     mainSubmitText: { color: '#000', fontSize: 14, fontWeight: '900', letterSpacing: 1 },

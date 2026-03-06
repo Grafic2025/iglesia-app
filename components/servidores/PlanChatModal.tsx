@@ -48,6 +48,7 @@ interface PlanChatModalProps {
     onClose: () => void;
     planId: string;
     memberId: string;
+    planName: string;
     planTitle: string;
     planDate: string;
     planTime: string;
@@ -59,6 +60,7 @@ export const PlanChatModal: React.FC<PlanChatModalProps> = ({
     onClose,
     planId,
     memberId,
+    planName,
     planTitle,
     planDate,
     planTime,
@@ -303,9 +305,10 @@ export const PlanChatModal: React.FC<PlanChatModalProps> = ({
             Promise.all(receivers.map(receiver =>
                 sendPushNotification(
                     receiver.token_notificacion,
-                    `${planTitle} (Chat)`,
+                    `${planName} (Chat)`,
                     bodyText,
-                    mediaUrl
+                    mediaUrl,
+                    { type: 'chat', planId: planId }
                 )
             )).catch(err => console.error("Error al enviar notificaciones de chat:", err));
         }
@@ -503,7 +506,7 @@ export const PlanChatModal: React.FC<PlanChatModalProps> = ({
             />
 
             <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                behavior="padding"
                 style={styles.modalContent}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
             >
@@ -520,8 +523,8 @@ export const PlanChatModal: React.FC<PlanChatModalProps> = ({
                                 onPress={() => setShowInfo(true)}
                                 activeOpacity={0.7}
                             >
-                                <Text style={styles.headerTitle} numberOfLines={1}>{planTitle}</Text>
-                                <Text style={styles.headerSubtitle}>{planDate} - Tocá para info</Text>
+                                <Text style={[styles.headerTitle, { textTransform: 'capitalize' }]} numberOfLines={1}>{planTitle}</Text>
+                                <Text style={styles.headerSubtitle}>{planTime} HS - Tocá para info</Text>
                             </TouchableOpacity>
 
                             <View style={styles.statusBadge}>
@@ -601,7 +604,7 @@ export const PlanChatModal: React.FC<PlanChatModalProps> = ({
                     </>
                 )}
 
-                <View style={styles.inputSection}>
+                <View style={[styles.inputSection, { paddingBottom: insets.bottom > 0 ? insets.bottom : 10 }]}>
                     <BlurView intensity={40} tint="dark" style={styles.inputBlur}>
                         <TouchableOpacity onPress={pickImage} style={styles.attachButton}>
                             <MaterialCommunityIcons name="camera" size={22} color="#888" />
@@ -617,7 +620,10 @@ export const PlanChatModal: React.FC<PlanChatModalProps> = ({
                             value={inputText}
                             onChangeText={setInputText}
                             multiline
+                            blurOnSubmit={false}
+                            returnKeyType="send"
                             onSubmitEditing={sendMessage}
+                            submitBehavior="submit"
                         />
 
                         <TouchableOpacity
@@ -647,7 +653,7 @@ export const PlanChatModal: React.FC<PlanChatModalProps> = ({
                                 <View style={styles.infoIconCircle}>
                                     <MaterialCommunityIcons name="account-group" size={50} color="#c5ff00" />
                                 </View>
-                                <Text style={styles.infoMainTitle}>{planTitle}</Text>
+                                <Text style={[styles.infoMainTitle, { textTransform: 'capitalize' }]}>{planTitle}</Text>
                                 <Text style={styles.infoMainSubtitle}>Grupo de Servidores • {participants.length} integrantes</Text>
                             </View>
 

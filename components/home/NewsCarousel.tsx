@@ -23,11 +23,11 @@ const NewsCarousel: React.FC<NewsCarouselProps> = React.memo(({ data, onPress })
         if (data.length <= 1) return;
         autoPlayRef.current = setInterval(() => {
             setActiveSlide(prev => {
-                const next = (prev - 1 + data.length) % data.length;
+                const next = (prev + 1) % data.length;
                 flatListRef.current?.scrollToIndex({ index: next, animated: true });
                 return next;
             });
-        }, 4000);
+        }, 5000); // 5 segundos para que de tiempo a leer
         return () => { if (autoPlayRef.current) clearInterval(autoPlayRef.current); };
     }, [data.length]);
 
