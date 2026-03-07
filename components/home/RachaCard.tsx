@@ -59,4 +59,5 @@ const styles = StyleSheet.create({
     rachaSubBtnTxt: { color: '#fff', fontSize: 11, fontFamily: 'Montserrat_700Bold', marginLeft: 8 }
 });
 
+RachaCard.displayName = 'RachaCard';
 export default RachaCard;

@@ -7,7 +7,7 @@ import {
 } from '@expo-google-fonts/montserrat';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useRootNavigationState, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
@@ -83,21 +83,22 @@ function RootLayoutNav() {
   const { isLoggedIn, loading } = useApp();
   const segments = useSegments();
   const router = useRouter();
+  const rootNavigationState = useRootNavigationState();
 
   useEffect(() => {
-    if (loading) return; // Wait for initial cache loading
+    // Wait for initial cache loading and for the Expo Router navigation tree to be fully mounted
+    if (loading || !rootNavigationState?.key) return;
 
-    // If segments[0] is "(app)" it means we are in the secure area
-    const inAuthGroup = segments[0] === '(app)';
+    const currentSegment = segments[0];
 
-    if (!isLoggedIn && inAuthGroup) {
-      // Redirect to login if unauthenticated and trying to access secure area
+    if (!isLoggedIn && currentSegment !== 'login') {
+      // Redirect to login if unauthenticated and not already on the login page
       router.replace('/login');
-    } else if (isLoggedIn && !inAuthGroup) {
-      // Redirect to main App if authenticated and outside secure area
+    } else if (isLoggedIn && currentSegment !== '(app)') {
+      // Redirect to main App if authenticated and not already in the secure area
       router.replace('/(app)');
     }
-  }, [isLoggedIn, loading, segments]);
+  }, [isLoggedIn, loading, segments, rootNavigationState?.key]);
 
   return <Stack screenOptions={{ headerShown: false }} />;
 }

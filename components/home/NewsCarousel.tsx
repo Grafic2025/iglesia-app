@@ -132,4 +132,5 @@ const styles = StyleSheet.create({
     dotInactive: { width: 5, backgroundColor: 'rgba(255,255,255,0.3)' }
 });
 
+NewsCarousel.displayName = 'NewsCarousel';
 export default NewsCarousel;

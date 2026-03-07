@@ -97,6 +97,7 @@ const WelcomeHeader: React.FC<WelcomeHeaderProps> = React.memo(({
   );
 });
 
+WelcomeHeader.displayName = 'WelcomeHeader';
 export default WelcomeHeader;
 
 // ======================================

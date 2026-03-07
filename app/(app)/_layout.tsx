@@ -23,17 +23,7 @@ function AppLayout() {
     const router = useRouter();
     const pathname = usePathname();
 
-    let currentScreen = 'Inicio';
-    if (pathname.includes('perfil')) currentScreen = 'Mi Perfil';
-    else if (pathname.includes('agenda')) currentScreen = 'Agenda';
-    else if (pathname.includes('oracion')) currentScreen = 'Necesito Oración';
-    else if (pathname.includes('notificaciones')) currentScreen = 'Notificaciones';
-    else if (pathname.includes('notas')) currentScreen = 'Mis Notas';
-    else if (pathname.includes('mensajes')) currentScreen = 'Mensajes';
-    else if (pathname.includes('serie')) currentScreen = 'SerieEsenciales';
-    else if (pathname.includes('videos')) currentScreen = 'Videos';
-    else if (pathname.includes('servidores')) currentScreen = 'Servidores';
-    else if (pathname.includes('contacto')) currentScreen = 'Contacto';
+
 
     const {
         toggleMenu,
@@ -104,7 +94,6 @@ function AppLayout() {
                     nombre={nombre}
                     apellido={apellido}
                     fotoUrl={fotoUrl}
-                    currentScreen={currentScreen}
                     unreadCount={unreadCount}
                     esServidor={esServidor}
                     toggleMenu={toggleMenu}
