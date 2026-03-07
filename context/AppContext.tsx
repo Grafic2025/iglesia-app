@@ -380,26 +380,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 const parsed = generalItems.map(item => {
                     const id = item.match(/yt:videoId>(.*)<\/yt/)?.[1];
                     const title = item.match(/title>(.*)<\/title/)?.[1];
-                    return { id, title, thumb: `https://i.ytimg.com/vi/${id}/mqdefault.jpg` };
+                    return { id, title, thumb: `https://i.ytimg.com/vi/${id}/hqdefault.jpg` };
                 }).filter(v => v.id);
                 AsyncStorage.setItem('cache_videos', JSON.stringify(parsed));
                 console.log(`[YOUTUBE] ${parsed.length} videos generales cacheados.`);
             }
 
-            // --- Esenciales: canal + playlist, deduplicados ---
             const parseEntries = (xml: string) =>
                 (xml.match(/<entry>([\s\S]*?)<\/entry>/g) || []).map(item => {
                     const id = item.match(/yt:videoId>(.*)<\/yt/)?.[1];
                     const titulo = item.match(/title>(.*)<\/title/)?.[1];
-                    return { id, titulo, imagen_url: `https://i.ytimg.com/vi/${id}/mqdefault.jpg` };
+                    return { id, titulo, imagen_url: `https://i.ytimg.com/vi/${id}/hqdefault.jpg` };
                 });
 
+            // Combinamos los feeds pero aplicamos el filtro ESTRICTO pedido por el usuario
             const allEntries = [...parseEntries(channelXml), ...parseEntries(playlistXml)];
             const seen = new Set<string>();
+
             const unique = allEntries.filter(v => {
+                const titleU = v.titulo?.toUpperCase().trim() || '';
+                // La condición: que empiece (o contenga) ESENCIALES y no sea un Episodio de Podcast
+                if (!titleU.includes('ESENCIALES')) return false;
+                if (titleU.includes('EPISODIO')) return false;
+
                 if (!v.id || seen.has(v.id)) return false;
                 seen.add(v.id);
-                return v.titulo?.toUpperCase().includes('ESENCIALES');
+                return true;
             });
             setSerieEsenciales(unique);
             AsyncStorage.setItem('cache_esenciales', JSON.stringify(unique));

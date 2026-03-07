@@ -22,7 +22,7 @@ const EsencialesSection: React.FC<EsencialesSectionProps> = React.memo(({ data, 
         >
             <View style={styles.videoThumbnailContainer}>
                 <ExpoImage
-                    source={{ uri: item.imagen_url }}
+                    source={{ uri: item.portada_url || item.imagen_url }}
                     style={styles.videoThumbnail}
                     contentFit="cover"
                     placeholder={BLUR_HASH}

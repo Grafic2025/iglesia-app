@@ -19,6 +19,7 @@ import NotesScreen from '../components/screens/NotesScreen';
 import NotificationInbox from '../components/screens/NotificationInbox';
 import PrayerScreen from '../components/screens/PrayerScreen';
 import ProfileScreen from '../components/screens/ProfileScreen';
+import SerieEsencialesScreen from '../components/screens/SerieEsencialesScreen';
 import ServidoresScreen from '../components/screens/ServidoresScreen';
 import SupportScreen from '../components/screens/SupportScreen';
 import VideosScreen from '../components/screens/VideosScreen';
@@ -375,6 +376,8 @@ export function useAppContentLogic() {
         return <NotesScreen navigateTo={navigateTo} />;
       case 'Mensajes':
         return <MessagesScreen navigateTo={navigateTo} />;
+      case 'SerieEsenciales':
+        return <SerieEsencialesScreen navigateTo={navigateTo} />;
       case 'Videos':
         return <VideosScreen navigateTo={navigateTo} />;
       case 'NewsDetail':

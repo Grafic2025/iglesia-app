@@ -2,83 +2,43 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Animated, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import YoutubePlayer from 'react-native-youtube-iframe';
+import { ESENCIALES_VIDEOS } from '../../lib/esencialesData';
 
-const MessagesScreen = ({ navigateTo }: { navigateTo: (s: string) => void }) => {
+const SerieEsencialesScreen = ({ navigateTo }: { navigateTo: (s: string) => void }) => {
     const insets = useSafeAreaInsets();
-    const [recursos, setRecursos] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedVideo, setSelectedVideo] = useState<any>(null);
     const fadeAnim = useState(new Animated.Value(0))[0];
 
-    const fetchRecursos = React.useCallback(async () => {
-        try {
-            const playlistId = 'PL9eGAPSt61HBxiNwoXIG0xpaWzf0aNTuC';
-            const rssUrl = `https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistId}`;
-            const response = await fetch(rssUrl);
-            const xml = await response.text();
-
-            const entries = xml.split('<entry>').slice(1);
-            const podcasts = entries.map(entry => {
-                const videoId = entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/)?.[1];
-                let title = entry.match(/<title>([^<]+)<\/title>/)?.[1];
-                const published = entry.match(/<published>([^<]+)<\/published>/)?.[1];
-                const descriptionMatch = entry.match(/<media:description>([\s\S]*?)<\/media:description>/);
-                let description = descriptionMatch ? descriptionMatch[1] : '';
-
-                if (title) title = title.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'");
-                description = description.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;/g, "'");
-
-                if (!videoId) return null;
-                return {
-                    id: videoId,
-                    titulo: title || 'Podcast',
-                    descripcion: description,
-                    portada_url: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-                    video_url: `https://www.youtube.com/watch?v=${videoId}`,
-                    fecha: published || new Date().toISOString()
-                };
-            }).filter(v => v !== null)
-                .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
-
-            setRecursos(podcasts);
-            Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }).start();
-        } catch (e) {
-            console.error("Error cargando podcasts:", e);
-        } finally {
-            setLoading(false);
-        }
+    useEffect(() => {
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true
+        }).start();
     }, [fadeAnim]);
 
-    useEffect(() => {
-        fetchRecursos();
-    }, [fetchRecursos]);
-
     const openVideo = (video: any) => {
+        if (!video.id || video.id.includes('YOUTUBE_ID')) {
+            alert('Este video aún no está disponible.');
+            return;
+        }
         setSelectedVideo(video);
         setModalVisible(true);
     };
-
-    if (loading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#c5ff00" />
-            </View>
-        );
-    }
 
     return (
         <View style={styles.mainWrapper}>
             <View style={styles.header}>
                 <Image
-                    source={{ uri: recursos[0]?.portada_url }}
-                    style={[StyleSheet.absoluteFill, { resizeMode: 'cover' }]}
+                    source={{ uri: ESENCIALES_VIDEOS[0]?.imagen_url }}
+                    style={[StyleSheet.absoluteFill, { resizeMode: 'cover', opacity: 0.6 }]}
                 />
                 <LinearGradient
-                    colors={['#050B25', 'rgba(5, 11, 37, 0.2)', '#050B25']}
+                    colors={['#050B25', 'rgba(5, 11, 37, 0.4)', '#050B25']}
                     style={StyleSheet.absoluteFill}
                 />
 
@@ -89,11 +49,11 @@ const MessagesScreen = ({ navigateTo }: { navigateTo: (s: string) => void }) => 
                     </TouchableOpacity>
 
                     <View style={styles.headerBody}>
-                        <Text style={styles.headerLabel}>DISCIPULADO</Text>
-                        <Text style={styles.headerTitle}>SERIE ESENCIALES</Text>
+                        <Text style={styles.headerLabel}>SERIE COMPLETA</Text>
+                        <Text style={styles.headerTitle}>ESENCIALES</Text>
                         <View style={styles.statsRow}>
                             <View style={styles.statTag}>
-                                <Text style={styles.statTagText}>{recursos.length} EPISODIOS</Text>
+                                <Text style={styles.statTagText}>{ESENCIALES_VIDEOS.length} MENSJAES</Text>
                             </View>
                         </View>
                     </View>
@@ -101,7 +61,7 @@ const MessagesScreen = ({ navigateTo }: { navigateTo: (s: string) => void }) => 
             </View>
 
             <Animated.FlatList
-                data={recursos}
+                data={[...ESENCIALES_VIDEOS].reverse()}
                 style={{ opacity: fadeAnim }}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.listContent}
@@ -112,14 +72,14 @@ const MessagesScreen = ({ navigateTo }: { navigateTo: (s: string) => void }) => 
                         activeOpacity={0.9}
                     >
                         <View style={styles.episodeImageContainer}>
-                            <Image source={{ uri: item.portada_url }} style={styles.episodeImage} />
+                            <Image source={{ uri: item.imagen_url }} style={styles.episodeImage} />
                             <BlurView intensity={20} tint="dark" style={styles.episodePlayOverlay}>
                                 <MaterialCommunityIcons name="play" size={28} color="#c5ff00" />
                             </BlurView>
                         </View>
 
                         <View style={styles.episodeDetails}>
-                            <Text style={styles.episodeIndex}>EPISODIO {index + 1}</Text>
+                            <Text style={styles.episodeIndex}>PARTE {index + 1}</Text>
                             <Text style={styles.episodeTitle} numberOfLines={2}>{item.titulo}</Text>
                         </View>
                     </TouchableOpacity>
@@ -149,17 +109,13 @@ const MessagesScreen = ({ navigateTo }: { navigateTo: (s: string) => void }) => 
 
                             <View style={styles.videoMetaContainer}>
                                 <Text style={styles.videoMetaTitle}>{selectedVideo?.titulo}</Text>
-                                <Text style={styles.videoMetaSubtitle}>Esenciales • Summer Edition</Text>
+                                <Text style={styles.videoMetaSubtitle}>Esenciales • Prédica del Domingo</Text>
 
                                 <View style={styles.modalDivider} />
 
                                 <Text style={styles.videoDescLabel}>ACERCA DE ESTE MENSAJE</Text>
                                 <Text style={styles.videoDescText}>
-                                    {selectedVideo?.descripcion ? selectedVideo.descripcion : (
-                                        'Sumérgete en este episodio de nuestra serie de discipulado. ' +
-                                        'Exploramos principios bíblicos prácticos para fortalecer tu caminar con Cristo ' +
-                                        'en un formato dinámico y profundo.'
-                                    )}
+                                    {selectedVideo?.descripcion}
                                 </Text>
                             </View>
                         </View>
@@ -172,7 +128,6 @@ const MessagesScreen = ({ navigateTo }: { navigateTo: (s: string) => void }) => 
 
 const styles = StyleSheet.create({
     mainWrapper: { flex: 1, backgroundColor: '#050B25' },
-    loadingContainer: { flex: 1, backgroundColor: '#050B25', justifyContent: 'center', alignItems: 'center' },
     header: { height: 320, position: 'relative' },
     headerSafe: { flex: 1, padding: 25 },
     backButton: {
@@ -191,7 +146,7 @@ const styles = StyleSheet.create({
     headerLabel: { color: '#c5ff00', fontSize: 11, fontWeight: '900', letterSpacing: 4, textShadowColor: '#000', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 4 },
     headerTitle: { color: '#fff', fontSize: 32, fontWeight: '900', letterSpacing: -1, marginTop: 5, textShadowColor: '#000', textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 6 },
     statsRow: { flexDirection: 'row', gap: 10, marginTop: 15 },
-    statTag: { backgroundColor: 'rgba(0,0,0,0.9)', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 10, borderWidth: 1, borderColor: '#c5ff0033' },
+    statTag: { backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 10, borderWidth: 1, borderColor: '#ffffff22' },
     statTagText: { color: '#fff', fontSize: 10, fontWeight: '900', letterSpacing: 0.5 },
 
     listContent: { padding: 15, paddingBottom: 100 },
@@ -210,8 +165,6 @@ const styles = StyleSheet.create({
     episodeDetails: { flex: 1, marginLeft: 15, justifyContent: 'center' },
     episodeIndex: { color: '#c5ff00', fontSize: 11, fontWeight: '900', marginBottom: 4, letterSpacing: 1 },
     episodeTitle: { color: '#fff', fontSize: 16, fontWeight: '900', lineHeight: 22, letterSpacing: -0.3 },
-    episodeFooter: { flexDirection: 'row', alignItems: 'center', marginTop: 8, opacity: 0.5 },
-    episodeMeta: { color: '#fff', fontSize: 10, fontWeight: '500', marginLeft: 6 },
 
     modalOverlay: { flex: 1, backgroundColor: 'rgba(2, 2, 5, 0.95)' },
     modalSafe: { flex: 1 },
@@ -226,4 +179,4 @@ const styles = StyleSheet.create({
     videoDescText: { color: '#888', fontSize: 14, lineHeight: 22, fontWeight: '400' },
 });
 
-export default MessagesScreen;
+export default SerieEsencialesScreen;

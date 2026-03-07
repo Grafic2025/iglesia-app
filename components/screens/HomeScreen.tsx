@@ -6,6 +6,7 @@ import { Alert, Animated, Linking, RefreshControl, ScrollView, StyleSheet, Text,
 import { useApp } from '../../context/AppContext';
 
 // Modular Components
+import { ESENCIALES_VIDEOS } from '../../lib/esencialesData';
 import ActionGrid from '../home/ActionGrid';
 import EsencialesSection from '../home/EsencialesSection';
 import { IdsBotFab } from '../home/IdsBotFab';
@@ -81,21 +82,33 @@ const HomeScreen = ({ navigateTo, setVideoSeleccionado, setModalVideoVisible, se
 
     const carouselData = React.useMemo(() => {
         let list = [...noticiasSupabase];
+
         if (isCurrentlyLive && liveVideoUrl) {
-            const liveItem = {
-                id: 'live-now',
-                titulo: 'TRANSMISIÓN EN VIVO',
-                descripcion: '¡Únete a nuestra reunión ahora mismo!',
-                imagen_url: 'https://img.youtube.com/vi/live/maxresdefault.jpg',
-                isLive: true,
-                liveUrl: liveVideoUrl,
-                es_youtube: true
-            };
-            list = [liveItem, ...list];
-        } else {
-            // Si no estamos en vivo, marcamos la primera noticia como Live si es de Youtube (para pruebas o si el feed es lento)
-            list = list.map((n, i) => ({ ...n, isLive: isCurrentlyLive && n.es_youtube && i === 0 }));
+            // El usuario programa el video el sábado y le da Sincronizar.
+            // Entonces, el primer item en noticiasSupabase YA es la transmisión.
+            // En vez de crear una tarjeta genérica, "encendemos" la tarjeta real con el nombre del culto.
+            if (list.length > 0 && list[0].es_youtube) {
+                list[0] = {
+                    ...list[0],
+                    isLive: true,
+                    liveUrl: liveVideoUrl,
+                    descripcion: 'ESTAMOS EN VIVO SUMATE'
+                };
+            } else {
+                // Fallback por si acaso alguien borró las noticias o no sincronizó
+                const liveItem = {
+                    id: 'live-now',
+                    titulo: 'TRANSMISIÓN EN VIVO',
+                    descripcion: 'ESTAMOS EN VIVO SUMATE',
+                    imagen_url: 'https://img.youtube.com/vi/live/maxresdefault.jpg',
+                    isLive: true,
+                    liveUrl: liveVideoUrl,
+                    es_youtube: true
+                };
+                list = [liveItem, ...list];
+            }
         }
+
         return list;
     }, [noticiasSupabase, isCurrentlyLive, liveVideoUrl]);
 
@@ -153,10 +166,10 @@ const HomeScreen = ({ navigateTo, setVideoSeleccionado, setModalVideoVisible, se
                 />
 
                 <EsencialesSection
-                    data={serieEsenciales}
+                    data={ESENCIALES_VIDEOS.slice(0, 3)} // Muestra los 3 últimos en el Home
                     watchedVideos={watchedVideos}
                     onVideoPress={handleVideoPress}
-                    onViewMorePress={() => navigateTo('Mensajes')}
+                    onViewMorePress={() => navigateTo('SerieEsenciales')}
                 />
 
                 <ActionGrid
