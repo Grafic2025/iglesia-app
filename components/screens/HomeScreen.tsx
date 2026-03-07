@@ -227,7 +227,7 @@ const HomeScreen = ({ navigateTo, setVideoSeleccionado, setModalVideoVisible, se
                         <SocialBtn icon="instagram" color="#E1306C" url="https://instagram.com/iglesiadelsalvador" />
                         <SocialBtn icon="facebook" color="#4267B2" url="https://facebook.com/iglesiadelsalvador" />
                         <SocialBtn icon="youtube-play" color="#FF0000" url="https://youtube.com/@iglesiadelsalvador" />
-                        <SocialBtn icon="tiktok" color="#fff" url="https://www.tiktok.com/@idsalvador" is5 />
+                        <SocialBtn icon="tiktok" color="#fff" url="https://www.tiktok.com/@iglesiadelsalvador" is5 />
                     </View>
 
                     {/* Copyright */}

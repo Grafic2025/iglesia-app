@@ -425,13 +425,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } catch (e) { console.error('[YOUTUBE] Error en fetch:', e); }
     }, []);
 
-    /** Solo refresca Supabase en paralelo — usado por los realtime listeners */
-    const refreshSupabaseOnly = useCallback(async () => {
+    const supabaseCacheTs = React.useRef<number>(0);
+
+    /** Solo refresca Supabase en paralelo — usado por los realtime listeners y refreshData. Limita los requests a 1 cada 10 seg automáticos */
+    const refreshSupabaseOnly = useCallback(async (force = false) => {
         if (!memberId) {
             console.log('[SUPABASE] No hay ID de miembro, saltando fetch.');
             return;
         }
+
+        const now = Date.now();
+        const TEN_SECONDS = 10 * 1000;
+        if (!force && (now - supabaseCacheTs.current < TEN_SECONDS)) {
+            console.log('[SUPABASE] Throttle activo: Sincronización reciente, omitiendo consulta.');
+            return;
+        }
+
         console.log('[SUPABASE] Iniciando sincronización de datos...');
+        supabaseCacheTs.current = now;
         try {
             const hace30Dias = new Date();
             hace30Dias.setDate(hace30Dias.getDate() - 30);

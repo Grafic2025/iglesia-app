@@ -8,11 +8,11 @@ const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-
  * Compila toda la información estática y dinámica de la Iglesia para darle contexto al bot.
  */
 export const getChurchContext = async (userData: any) => {
-    const infoEstatica = {
+    let infoEstatica = {
         nombre: "Iglesia del Salvador",
         ubicacion: "Constituyentes 950, Morón, Buenos Aires, Argentina",
         horarios: {
-            presencial: "Domingos a las 9:00, 11:00 y 19:00 hs",
+            presencial: "Domingos a las 09:00, 11:00 y 19:00 hs",
             online: "Domingos a las 11:00 hs vía YouTube",
         },
         servicios: [
@@ -31,6 +31,12 @@ export const getChurchContext = async (userData: any) => {
 
     let noticiasRecientes: string[] = [];
     try {
+        // Obtenemos la configuración dinámica del bot desde la nube
+        const { data: configData } = await supabase.from('configuracion').select('valor').eq('clave', 'bot_info').maybeSingle();
+        if (configData && configData.valor) {
+            infoEstatica = { ...infoEstatica, ...configData.valor };
+        }
+
         const { data } = await supabase
             .from('noticias')
             .select('titulo, descripcion')

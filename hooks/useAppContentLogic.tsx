@@ -312,20 +312,46 @@ export function useAppContentLogic() {
 
   const handleBarCodeScanned = async ({ data }: any) => {
     setScanning(false);
-    if (data === 'PRESENTE_IDS') {
+    if (data === 'ASISTENCIA_IGLESIA') {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => { });
       const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
-      const hora = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+      const now = new Date();
+      const hora = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
+      // Calculate the meeting time based on the hour and day
+      let horarioReunion = 'General';
+
+      const isSunday = now.getDay() === 0; // 0 = Sunday
+      const hour = now.getHours();
+
+      if (isSunday) {
+        if (hour >= 8 && hour < 10) {
+          horarioReunion = '09:00';
+        } else if (hour >= 10 && hour <= 14) {
+          horarioReunion = '11:00';
+        } else if (hour >= 18 && hour <= 21) {
+          horarioReunion = '19:00';
+        }
+      }
 
       const { error } = await supabase.from('asistencias').insert([
-        { miembro_id: memberId, fecha: hoy, hora_entrada: hora, horario_reunion: 'General' },
+        { miembro_id: memberId, fecha: hoy, hora_entrada: hora, horario_reunion: horarioReunion },
       ]);
 
       if (error) {
-        Alert.alert('Error', 'Ya registraste tu asistencia hoy.');
+        console.error('Error insertando asistencia:', error);
+        // Mostrar mensaje de error real en lugar de un genérico "duplicado"
+        Alert.alert('Error al registrar', error.message || 'No se pudo registrar la asistencia.');
       } else {
         setShowSuccessScan(true);
         setTimeout(() => setShowSuccessScan(false), 3000);
+        // Show a local push notification confirming attendance
+        Notifications.scheduleNotificationAsync({
+          content: {
+            title: 'Asistencia registrada',
+            body: '¡Gracias por marcar presente!',
+          },
+          trigger: null,
+        }).catch((e) => console.log('Error notificando:', e));
         refreshData();
       }
     } else {
