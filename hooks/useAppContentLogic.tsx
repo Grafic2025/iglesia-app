@@ -1,32 +1,14 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import * as Notifications from 'expo-notifications';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Animated, Dimensions } from 'react-native';
 
 import { useApp } from '../context/AppContext';
 import { registerForPushNotifications } from '../lib/registerPushToken';
 import { supabase } from '../lib/supabase';
-
-// screens used in renderScreen
-import AgendaScreen from '../components/screens/AgendaScreen';
-import HomeScreen from '../components/screens/HomeScreen';
-import MessagesScreen from '../components/screens/MessagesScreen';
-import NewsDetail from '../components/screens/NewsDetail';
-import NotesScreen from '../components/screens/NotesScreen';
-import NotificationInbox from '../components/screens/NotificationInbox';
-import PrayerScreen from '../components/screens/PrayerScreen';
-import ProfileScreen from '../components/screens/ProfileScreen';
-import SerieEsencialesScreen from '../components/screens/SerieEsencialesScreen';
-import ServidoresScreen from '../components/screens/ServidoresScreen';
-import SupportScreen from '../components/screens/SupportScreen';
-import VideosScreen from '../components/screens/VideosScreen';
-
-// Memoizamos HomeScreen para que no se re-renderice si sus props no cambian.
-// Esto es CRÍTICO para el rendimiento ya que HomeScreen es el componente más pesado.
-const MemoizedHomeScreen = React.memo(HomeScreen);
 
 const { width } = Dimensions.get('window');
 
@@ -43,8 +25,6 @@ export function useAppContentLogic() {
     nombre,
     apellido,
     fotoUrl,
-    currentScreen,
-    setCurrentScreen,
     login,
     logout,
     deleteAccount,
@@ -58,8 +38,6 @@ export function useAppContentLogic() {
     setDeepLinkTarget,
   } = useApp();
 
-  const [localNombre, setLocalNombre] = useState('');
-  const [localApellido, setLocalApellido] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [modalVideoVisible, setModalVideoVisible] = useState(false);
@@ -75,6 +53,7 @@ export function useAppContentLogic() {
   const notificationListener = useRef<any>(null);
   const responseListener = useRef<any>(null);
   const [, requestPermission] = useCameraPermissions();
+  const router = useRouter();
 
   const toggleMenu = () => {
     const toValue = isMenuOpen ? -width * 0.8 : 0;
@@ -85,17 +64,29 @@ export function useAppContentLogic() {
 
   const navigateTo = useCallback(
     (screen: string) => {
-      Animated.timing(screenFadeAnim, { toValue: 0, duration: 120, useNativeDriver: true }).start(() => {
-        setCurrentScreen(screen);
-        if (isMenuOpen) {
-          const toValue = -width * 0.8;
-          Animated.timing(slideAnim, { toValue, duration: 300, useNativeDriver: true }).start();
-          setIsMenuOpen(false);
-        }
-        Animated.timing(screenFadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
-      });
+      if (isMenuOpen) {
+        const toValue = -width * 0.8;
+        Animated.timing(slideAnim, { toValue, duration: 300, useNativeDriver: true }).start();
+        setIsMenuOpen(false);
+      }
+
+      switch (screen) {
+        case 'Inicio': router.replace('/(app)'); break;
+        case 'Mi Perfil': router.replace('/(app)/perfil'); break;
+        case 'Agenda': router.replace('/(app)/agenda'); break;
+        case 'Necesito Oración': router.replace('/(app)/oracion'); break;
+        case 'Notificaciones': router.replace('/(app)/notificaciones'); break;
+        case 'Mis Notas': router.replace('/(app)/notas'); break;
+        case 'Mensajes': router.replace('/(app)/mensajes'); break;
+        case 'SerieEsenciales': router.replace('/(app)/serie'); break;
+        case 'Videos': router.replace('/(app)/videos'); break;
+        case 'Servidores': router.replace('/(app)/servidores'); break;
+        case 'Contacto': router.replace('/(app)/contacto'); break;
+        case 'NewsDetail': router.replace('/(app)/news-detail'); break;
+        default: router.replace('/(app)');
+      }
     },
-    [screenFadeAnim, isMenuOpen, slideAnim, setCurrentScreen]
+    [isMenuOpen, slideAnim, router]
   );
 
   const handleNotificationResponse = useCallback((data: any) => {
@@ -166,68 +157,6 @@ export function useAppContentLogic() {
     }
   }, [isLoggedIn, memberId, addNotificationToInbox, handleNotificationResponse]);
 
-  useEffect(() => {
-    if (!isLoggedIn && !loading) {
-      if (nombre && !localNombre) setLocalNombre(nombre);
-      if (apellido && !localApellido) setLocalApellido(apellido);
-    }
-  }, [isLoggedIn, loading, nombre, apellido]);
-
-
-
-  const handleLogin = async () => {
-    if (!localNombre || !localApellido) return;
-    try {
-      let { data, error } = await supabase
-        .from('miembros')
-        .select('id')
-        .ilike('nombre', localNombre.trim())
-        .ilike('apellido', localApellido.trim())
-        .maybeSingle();
-
-      let finalMemberId = data?.id;
-      if (!finalMemberId) {
-        const { data: newMember, error: insertError } = await supabase
-          .from('miembros')
-          .insert([
-            {
-              nombre: localNombre.trim(),
-              apellido: localApellido.trim(),
-              created_at: new Date().toISOString(),
-            },
-          ])
-          .select('id')
-          .single();
-
-        if (insertError) throw insertError;
-        finalMemberId = newMember.id;
-      }
-
-      if (finalMemberId) {
-        await login(finalMemberId, localNombre.trim(), localApellido.trim());
-
-        // Solo enviar notificación de bienvenida la PRIMERA vez que el usuario ingresa
-        const yaBienvenido = await AsyncStorage.getItem('welcomeShown');
-        if (!yaBienvenido) {
-          try {
-            await Notifications.scheduleNotificationAsync({
-              content: {
-                title: '¡Bienvenido a Iglesia del Salvador! 🙌',
-                body: `Hola ${localNombre.trim()}, nos alegra que seas parte de nuestra comunidad. ¡Dios te bendiga!`,
-              },
-              trigger: { seconds: 3, type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL },
-            });
-            await AsyncStorage.setItem('welcomeShown', 'true');
-          } catch {
-            // los permisos de notificación podrían no estar activos
-          }
-        }
-      }
-    } catch (e: any) {
-      console.error('Login Error:', e);
-      Alert.alert('Error', 'No se pudo iniciar sesión. Por favor intenta de nuevo.');
-    }
-  };
 
   const pickImage = async () => {
     const r = await ImagePicker.launchImageLibraryAsync({
@@ -359,79 +288,10 @@ export function useAppContentLogic() {
     }
   };
 
-  const renderScreen = () => {
-    switch (currentScreen) {
-      case 'Inicio':
-        return (
-          <MemoizedHomeScreen
-            navigateTo={navigateTo}
-            setVideoSeleccionado={setVideoSeleccionado}
-            setModalVideoVisible={setModalVideoVisible}
-            setScanning={setScanning}
-            requestPermission={requestPermission}
-            cargarRanking={cargarRanking}
-            setShowRanking={setShowRanking}
-            setShowHistorial={setShowHistorial}
-            setNoticiaSeleccionada={setNoticiaSeleccionada}
-            toggleMenu={toggleMenu}
-          />
-        );
-      case 'Mi Perfil':
-        return (
-          <ProfileScreen
-            navigateTo={navigateTo}
-            pickImage={pickImage}
-            handleModificarDatos={() =>
-              Alert.alert('Próximamente', 'Podrás editar tus datos pronto.')
-            }
-          />
-        );
-      case 'Agenda':
-        return <AgendaScreen navigateTo={navigateTo} />;
-      case 'Necesito Oración':
-        return (
-          <PrayerScreen
-            navigateTo={navigateTo}
-            cargarPedidos={cargarPedidos}
-            listaPedidosOracion={listaPedidosOracion}
-          />
-        );
-      case 'Notificaciones':
-        return <NotificationInbox navigateTo={navigateTo} />;
-      case 'Mis Notas':
-        return <NotesScreen navigateTo={navigateTo} />;
-      case 'Mensajes':
-        return <MessagesScreen navigateTo={navigateTo} />;
-      case 'SerieEsenciales':
-        return <SerieEsencialesScreen navigateTo={navigateTo} />;
-      case 'Videos':
-        return <VideosScreen navigateTo={navigateTo} />;
-      case 'NewsDetail':
-        return (
-          <NewsDetail
-            news={noticiaSeleccionada}
-            navigateTo={navigateTo}
-          />
-        );
-      case 'Servidores':
-        return <ServidoresScreen navigateTo={navigateTo} />;
-      case 'Contacto':
-        return (
-          <SupportScreen navigateTo={navigateTo} type="Contacto" />
-        );
-      default:
-        return <SupportScreen navigateTo={navigateTo} type={currentScreen} />;
-    }
-  };
-
   const handleLogout = async () => {
     console.log("[UI-LOGOUT] Botón presionado.");
 
-    // 1. Resetear el estado de la pantalla antes de empezar el cierre
-    console.log("[UI-LOGOUT] Reseteando pantalla a Inicio...");
-    setCurrentScreen('Inicio');
-
-    // 2. Cerrar el menú si está abierto
+    // Cerrar el menú si está abierto
     if (isMenuOpen) {
       console.log("[UI-LOGOUT] Cerrando menú lateral...");
       setIsMenuOpen(false);
@@ -453,11 +313,6 @@ export function useAppContentLogic() {
   };
 
   return {
-    // estados locales
-    localNombre,
-    setLocalNombre,
-    localApellido,
-    setLocalApellido,
     isMenuOpen,
     toggleMenu,
     scanning,
@@ -481,17 +336,14 @@ export function useAppContentLogic() {
     screenFadeAnim,
     requestPermission,
     // funciones de negocio
-    handleLogin,
     pickImage,
     cargarRanking,
     cargarPedidos,
     handleBarCodeScanned,
     navigateTo,
-    renderScreen,
     // información que sigue viniendo del contexto para uso en componentes
     isCurrentlyLive,
     liveVideoUrl,
-    currentScreen,
     unreadCount,
     nombre,
     apellido,
@@ -520,7 +372,6 @@ export function useAppContentLogic() {
                     style: 'destructive',
                     onPress: async () => {
                       try {
-                        setCurrentScreen('Inicio');
                         if (isMenuOpen) {
                           setIsMenuOpen(false);
                           Animated.timing(slideAnim, { toValue: -width * 0.8, duration: 150, useNativeDriver: true }).start();

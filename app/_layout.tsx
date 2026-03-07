@@ -7,12 +7,12 @@ import {
 } from '@expo-google-fonts/montserrat';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AppProvider } from '../context/AppContext';
+import { AppProvider, useApp } from '../context/AppContext';
 
 // Mantenemos la splash screen visible mientras cargamos recursos (fuentes, sesión, etc)
 SplashScreen.preventAutoHideAsync().catch(() => { });
@@ -71,10 +71,33 @@ export default function Layout() {
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
           <AppProvider>
-            <Stack screenOptions={{ headerShown: false }} />
+            <RootLayoutNav />
           </AppProvider>
         </SafeAreaProvider>
       </QueryClientProvider>
     </View>
   );
+}
+
+function RootLayoutNav() {
+  const { isLoggedIn, loading } = useApp();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return; // Wait for initial cache loading
+
+    // If segments[0] is "(app)" it means we are in the secure area
+    const inAuthGroup = segments[0] === '(app)';
+
+    if (!isLoggedIn && inAuthGroup) {
+      // Redirect to login if unauthenticated and trying to access secure area
+      router.replace('/login');
+    } else if (isLoggedIn && !inAuthGroup) {
+      // Redirect to main App if authenticated and outside secure area
+      router.replace('/(app)');
+    }
+  }, [isLoggedIn, loading, segments]);
+
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

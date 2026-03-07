@@ -1,18 +1,18 @@
+import { usePathname } from 'expo-router';
 import React from 'react';
 import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface LiveButtonProps {
   isCurrentlyLive: boolean;
-  currentScreen: string;
   liveVideoUrl?: string;
 }
 
 const LiveButton: React.FC<LiveButtonProps> = ({
   isCurrentlyLive,
-  currentScreen,
   liveVideoUrl,
 }) => {
-  if (!isCurrentlyLive || currentScreen === 'NewsDetail') return null;
+  const pathname = usePathname();
+  if (!isCurrentlyLive || pathname.includes('news-detail')) return null;
 
   return (
     <TouchableOpacity
