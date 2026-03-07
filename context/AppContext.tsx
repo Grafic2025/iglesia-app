@@ -16,8 +16,6 @@ export interface AppContextType {
     serieEsenciales: any[];
     rachaUsuario: number;
     asistenciasDetalle: any[];
-    currentScreen: string;
-    setCurrentScreen: (s: string) => void;
     logout: () => void;
     deleteAccount: () => Promise<void>;
     login: (id: string, name: string, surname: string) => Promise<void>;
@@ -58,7 +56,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [serieEsenciales, setSerieEsenciales] = useState<any[]>([]);
     const [rachaUsuario, setRachaUsuario] = useState(0);
     const [asistenciasDetalle, setAsistenciasDetalle] = useState<any[]>([]);
-    const [currentScreen, setCurrentScreen] = useState('Inicio');
     const [isCurrentlyLive, setIsCurrentlyLive] = useState(false);
     const [liveVideoUrl, setLiveVideoUrl] = useState<string | null>(null);
     const [esServidor, setEsServidor] = useState(false);
@@ -227,7 +224,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setEsAdmin(false);
             setEsServidor(false);
             setFotoUrl(null);
-            setCurrentScreen('Inicio'); // Reset screen on logout
             console.log("[LOGOUT] Proceso completado exitosamente.");
         } catch (e) {
             console.error("[LOGOUT] ERROR CRÍTICO durante el cierre:", e);
@@ -285,7 +281,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setRachaUsuario(0);
             setAsistenciasDetalle([]);
             setNotificationInbox([]);
-            setCurrentScreen('Inicio');
             console.log('[DELETE-ACCOUNT] Cuenta eliminada exitosamente.');
         } catch (e) {
             console.error('[DELETE-ACCOUNT] ERROR:', e);
@@ -541,7 +536,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         <AppContext.Provider value={{
             isLoggedIn, memberId, nombre, apellido, fotoUrl, fechaNacimiento, zona, loading,
             noticiasSupabase, serieEsenciales, rachaUsuario, asistenciasDetalle,
-            currentScreen, setCurrentScreen, logout, deleteAccount, login, loginWithBiometrics, refreshData,
+            logout, deleteAccount, login, loginWithBiometrics, refreshData,
             isCurrentlyLive, liveVideoUrl, esServidor, esAdmin, notificationInbox, addNotificationToInbox,
             unreadCount, markNotificationRead, markAllRead,
             homeActions,

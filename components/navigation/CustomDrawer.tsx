@@ -1,6 +1,7 @@
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image as ExpoImage } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { usePathname } from 'expo-router';
 import React, { useState } from 'react';
 import { Animated, Dimensions, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -11,7 +12,6 @@ interface CustomDrawerProps {
     nombre: string;
     apellido: string;
     fotoUrl: string | null;
-    currentScreen: string;
     unreadCount: number;
     esServidor: boolean;
     toggleMenu: () => void;
@@ -22,14 +22,14 @@ interface CustomDrawerProps {
 }
 
 /**
- * CustomDrawer mejorado con estética premium y BlurView.
+ * CustomDrawer — ahora usa `usePathname()` de Expo Router para detectar
+ * la pantalla activa desde la URL real del sistema, sin necesitar `currentScreen` como prop.
  */
 export const CustomDrawer: React.FC<CustomDrawerProps> = ({
     slideAnim,
     nombre,
     apellido,
     fotoUrl,
-    currentScreen,
     unreadCount,
     esServidor,
     toggleMenu,
@@ -38,13 +38,28 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
     logout,
     refreshData
 }) => {
+    const pathname = usePathname();
     const [refreshing, setRefreshing] = useState(false);
+
+    // Detectamos la pantalla activa desde la URL nativa
+    const isActive = (route: string) => {
+        if (route === 'Inicio') return pathname === '/(app)' || pathname === '/';
+        if (route === 'Mi Perfil') return pathname.includes('/perfil');
+        if (route === 'Notificaciones') return pathname.includes('/notificaciones');
+        if (route === 'Agenda') return pathname.includes('/agenda');
+        if (route === 'Mensajes') return pathname.includes('/mensajes');
+        if (route === 'Mis Notas') return pathname.includes('/notas');
+        if (route === 'Servidores') return pathname.includes('/servidores');
+        if (route === 'Contacto') return pathname.includes('/contacto');
+        return false;
+    };
 
     const onRefresh = async () => {
         setRefreshing(true);
         await refreshData();
         setRefreshing(false);
     };
+
     return (
         <Animated.View style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}>
             <LinearGradient colors={['#010A2A', '#020205']} style={StyleSheet.absoluteFill} />
@@ -95,13 +110,13 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
                     <DrawerItem
                         label="Inicio"
                         icon="home"
-                        active={currentScreen === 'Inicio'}
+                        active={isActive('Inicio')}
                         onPress={() => navigateTo('Inicio')}
                     />
                     <DrawerItem
                         label="Mi Perfil"
                         icon="account"
-                        active={currentScreen === 'Mi Perfil'}
+                        active={isActive('Mi Perfil')}
                         onPress={() => navigateTo('Mi Perfil')}
                         isMCI
                     />
@@ -110,7 +125,7 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
                         <DrawerItem
                             label="Notificaciones"
                             icon="bell"
-                            active={currentScreen === 'Notificaciones'}
+                            active={isActive('Notificaciones')}
                             onPress={() => navigateTo('Notificaciones')}
                         />
                         {unreadCount > 0 && (
@@ -123,20 +138,20 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
                     <DrawerItem
                         label="Agenda"
                         icon="calendar-month"
-                        active={currentScreen === 'Agenda'}
+                        active={isActive('Agenda')}
                         onPress={() => navigateTo('Agenda')}
                         isMCI
                     />
                     <DrawerItem
                         label="Mensajes"
                         icon="play-circle"
-                        active={currentScreen === 'Mensajes'}
+                        active={isActive('Mensajes')}
                         onPress={() => navigateTo('Mensajes')}
                     />
                     <DrawerItem
                         label="Mis Notas"
                         icon="notebook-edit"
-                        active={currentScreen === 'Mis Notas'}
+                        active={isActive('Mis Notas')}
                         onPress={() => navigateTo('Mis Notas')}
                         isMCI
                     />
@@ -149,7 +164,7 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
                         <DrawerItem
                             label="Servidores"
                             icon="account-group"
-                            active={currentScreen === 'Servidores'}
+                            active={isActive('Servidores')}
                             onPress={() => navigateTo('Servidores')}
                             isMCI
                         />
@@ -158,13 +173,13 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
                     <DrawerItem
                         label="Contacto"
                         icon="phone"
-                        active={currentScreen === 'Contacto'}
+                        active={isActive('Contacto')}
                         onPress={() => navigateTo('Contacto')}
                     />
                     <DrawerItem
                         label="Nosotros"
                         icon="information"
-                        active={currentScreen === 'Nosotros'}
+                        active={isActive('Nosotros')}
                         onPress={() => navigateTo('Nosotros')}
                         isMCI
                     />
@@ -300,9 +315,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 5,
         marginBottom: 5
     },
-    drawerItemActive: {
-        // backgroundColor: 'rgba(197,255,0,0.05)',
-    },
+    drawerItemActive: {},
     iconBox: {
         width: 40,
         height: 40,
