@@ -1,8 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Animated, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import YoutubePlayer from 'react-native-youtube-iframe';
 
@@ -75,7 +76,10 @@ const MessagesScreen = ({ navigateTo }: { navigateTo: (s: string) => void }) => 
             <View style={styles.header}>
                 <Image
                     source={{ uri: recursos[0]?.portada_url }}
-                    style={[StyleSheet.absoluteFill, { resizeMode: 'cover' }]}
+                    style={StyleSheet.absoluteFill}
+                    contentFit="cover"
+                    transition={200}
+                    cachePolicy="disk"
                 />
                 <LinearGradient
                     colors={['#050B25', 'rgba(5, 11, 37, 0.2)', '#050B25']}
@@ -112,7 +116,13 @@ const MessagesScreen = ({ navigateTo }: { navigateTo: (s: string) => void }) => 
                         activeOpacity={0.9}
                     >
                         <View style={styles.episodeImageContainer}>
-                            <Image source={{ uri: item.portada_url }} style={styles.episodeImage} />
+                            <Image
+                                source={{ uri: item.portada_url }}
+                                style={styles.episodeImage}
+                                contentFit="cover"
+                                transition={150}
+                                cachePolicy="disk"
+                            />
                             <BlurView intensity={20} tint="dark" style={styles.episodePlayOverlay}>
                                 <MaterialCommunityIcons name="play" size={28} color="#c5ff00" />
                             </BlurView>

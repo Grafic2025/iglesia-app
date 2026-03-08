@@ -70,7 +70,7 @@ function AppLayout() {
             <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
             <Animated.View style={styles.screenContainer}>
-                <Stack screenOptions={{ headerShown: false, animation: 'fade' }} />
+                <Stack screenOptions={{ headerShown: false, animation: 'none' }} />
             </Animated.View>
 
             {isMenuOpen && (

@@ -1,6 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { Storage } from '../lib/storage';
 import { supabase } from '../lib/supabase';
 
 export interface AppContextType {
@@ -78,19 +78,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 cachedNews, cachedInbox, cachedActions, cachedEsenciales, cachedAsistencias
             ] = await Promise.all([
                 SecureStore.getItemAsync('memberId'),
-                AsyncStorage.getItem('nombre'),
-                AsyncStorage.getItem('apellido'),
-                AsyncStorage.getItem('foto_url'),
-                AsyncStorage.getItem('fecha_nacimiento'),
-                AsyncStorage.getItem('zona'),
-                AsyncStorage.getItem('es_servidor'),
-                AsyncStorage.getItem('es_admin'),
-                AsyncStorage.getItem('racha_usuario'),
-                AsyncStorage.getItem('cache_noticias'),
-                AsyncStorage.getItem('notificationInbox'),
-                AsyncStorage.getItem('cache_home_actions'),
-                AsyncStorage.getItem('cache_esenciales'),
-                AsyncStorage.getItem('cache_asistencias_detalle')
+                Storage.getItem('nombre'),
+                Storage.getItem('apellido'),
+                Storage.getItem('foto_url'),
+                Storage.getItem('fecha_nacimiento'),
+                Storage.getItem('zona'),
+                Storage.getItem('es_servidor'),
+                Storage.getItem('es_admin'),
+                Storage.getItem('racha_usuario'),
+                Storage.getItem('cache_noticias'),
+                Storage.getItem('notificationInbox'),
+                Storage.getItem('cache_home_actions'),
+                Storage.getItem('cache_esenciales'),
+                Storage.getItem('cache_asistencias_detalle')
             ]);
 
             console.log(`[SESSION] Datos recuperados -> ID: ${mid || 'Ninguno'}, Nombre: ${savedNombre || 'Ninguno'}`);
@@ -134,7 +134,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
 
             // Limpiar historial del bot al abrir la app (Cold Start) para que empiece de cero
-            await AsyncStorage.removeItem('ids_bot_session_chat');
+            await Storage.removeItem('ids_bot_session_chat');
 
         } catch (e) {
             console.error("[SESSION] ERROR crítico al cargar sesión:", e);
@@ -157,9 +157,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         try {
             await SecureStore.setItemAsync('memberId', id);
             await SecureStore.setItemAsync('biometricMemberId', id);
-            await AsyncStorage.setItem('nombre', name);
-            await AsyncStorage.setItem('apellido', surname);
-            await AsyncStorage.setItem('loginTimestamp', new Date().toISOString());
+            await Storage.setItem('nombre', name);
+            await Storage.setItem('apellido', surname);
+            await Storage.setItem('loginTimestamp', new Date().toISOString());
             setMemberId(id);
             setNombre(name);
             setApellido(surname);
@@ -180,8 +180,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         try {
             // Usamos biometricMemberId si no hay una sesión activa, lo que permite re-entrar tras un logout
             const mid = await SecureStore.getItemAsync('biometricMemberId') || await SecureStore.getItemAsync('memberId');
-            const savedNombre = await AsyncStorage.getItem('nombre');
-            const savedApellido = await AsyncStorage.getItem('apellido');
+            const savedNombre = await Storage.getItem('nombre');
+            const savedApellido = await Storage.getItem('apellido');
 
             console.log(`[AUTH-BIO] Datos encontrados -> ID: ${mid ? 'SÍ' : 'NO'}, Nombre: ${savedNombre ? 'SÍ' : 'NO'}`);
 
@@ -211,8 +211,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             console.log("[LOGOUT] Eliminando memberId de SecureStore...");
             await SecureStore.deleteItemAsync('memberId');
 
-            console.log("[LOGOUT] Eliminando loginTimestamp de AsyncStorage...");
-            await AsyncStorage.removeItem('loginTimestamp');
+            console.log("[LOGOUT] Eliminando loginTimestamp de Storage...");
+            await Storage.removeItem('loginTimestamp');
 
             // Opcional: Si quieres borrar el nombre/apellido totalmente descomenta esto:
             // await AsyncStorage.removeItem('nombre');
@@ -265,7 +265,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             // 4. Limpiar TODO el almacenamiento local
             await SecureStore.deleteItemAsync('memberId');
             await SecureStore.deleteItemAsync('biometricMemberId');
-            await AsyncStorage.clear();
+            await Storage.clear();
             console.log('[DELETE-ACCOUNT] Almacenamiento local limpiado.');
 
             // 5. Resetear todos los estados
@@ -308,7 +308,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
             const newNotif = { ...notif, id: now.toString(), date: new Date().toISOString(), read: false };
             const updated = [newNotif, ...prev];
-            AsyncStorage.setItem('notificationInbox', JSON.stringify(updated));
+            Storage.setItem('notificationInbox', JSON.stringify(updated));
             return updated;
         });
     }, []);
@@ -321,7 +321,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const markNotificationRead = (id: string) => {
         setNotificationInbox(prev => {
             const updated = prev.map(n => n.id === id ? { ...n, read: true } : n);
-            AsyncStorage.setItem('notificationInbox', JSON.stringify(updated));
+            Storage.setItem('notificationInbox', JSON.stringify(updated));
             return updated;
         });
     };
@@ -332,7 +332,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const markAllRead = () => {
         setNotificationInbox(prev => {
             const updated = prev.map(n => ({ ...n, read: true }));
-            AsyncStorage.setItem('notificationInbox', JSON.stringify(updated));
+            Storage.setItem('notificationInbox', JSON.stringify(updated));
             return updated;
         });
     };
@@ -377,7 +377,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     const title = item.match(/title>(.*)<\/title/)?.[1];
                     return { id, title, thumb: `https://i.ytimg.com/vi/${id}/hqdefault.jpg` };
                 }).filter(v => v.id);
-                AsyncStorage.setItem('cache_videos', JSON.stringify(parsed));
+                Storage.setItem('cache_videos', JSON.stringify(parsed));
                 console.log(`[YOUTUBE] ${parsed.length} videos generales cacheados.`);
             }
 
@@ -403,7 +403,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 return true;
             });
             setSerieEsenciales(unique);
-            AsyncStorage.setItem('cache_esenciales', JSON.stringify(unique));
+            Storage.setItem('cache_esenciales', JSON.stringify(unique));
             console.log(`[YOUTUBE] ${unique.length} videos Esenciales encontrados.`);
 
             // --- Live check (reutiliza el channelXml ya descargado) ---
@@ -439,6 +439,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         console.log('[SUPABASE] Iniciando sincronización de datos...');
         supabaseCacheTs.current = now;
         try {
+            // Sincronizar asistencias offline de la cola
+            const queueStr = await Storage.getItem('offline_attendance_queue');
+            if (queueStr) {
+                const queue = JSON.parse(queueStr);
+                if (Array.isArray(queue) && queue.length > 0) {
+                    console.log(`[SYNC] Subiendo ${queue.length} asistencias offline a la nube...`);
+                    const { error: syncErr } = await supabase.from('asistencias').insert(queue);
+                    if (!syncErr) {
+                        await Storage.removeItem('offline_attendance_queue');
+                        console.log('[SYNC] Cola offline subida exitosamente y limpiada.');
+                    } else {
+                        console.warn('[SYNC] Falló subir cola:', syncErr.message);
+                    }
+                }
+            }
+
             const hace30Dias = new Date();
             hace30Dias.setDate(hace30Dias.getDate() - 30);
 
@@ -455,7 +471,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
             if (newsRes.data) {
                 setNoticiasSupabase(newsRes.data);
-                AsyncStorage.setItem('cache_noticias', JSON.stringify(newsRes.data));
+                Storage.setItem('cache_noticias', JSON.stringify(newsRes.data));
                 console.log(`[SUPABASE] ${newsRes.data.length} noticias actualizadas.`);
             }
             if (memberRes.data) {
@@ -465,27 +481,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 setEsServidor(m.es_servidor || false); setEsAdmin(m.es_admin || false);
 
                 // Cachear datos de perfil
-                AsyncStorage.multiSet([
-                    ['nombre', m.nombre || ''],
-                    ['apellido', m.apellido || ''],
-                    ['foto_url', m.foto_url || ''],
-                    ['fecha_nacimiento', m.fecha_nacimiento || ''],
-                    ['zona', m.zona || ''],
-                    ['es_servidor', String(m.es_servidor || false)],
-                    ['es_admin', String(m.es_admin || false)],
-                ]);
+                Storage.setItem('nombre', m.nombre || '');
+                Storage.setItem('apellido', m.apellido || '');
+                Storage.setItem('foto_url', m.foto_url || '');
+                Storage.setItem('fecha_nacimiento', m.fecha_nacimiento || '');
+                Storage.setItem('zona', m.zona || '');
+                Storage.setItem('es_servidor', String(m.es_servidor || false));
+                Storage.setItem('es_admin', String(m.es_admin || false));
+
                 console.log('[SUPABASE] Perfil de usuario (Supabase) actualizado.');
             }
             if (asistRes.data) {
                 setRachaUsuario(asistRes.data.length);
                 setAsistenciasDetalle(asistRes.data);
-                AsyncStorage.setItem('racha_usuario', String(asistRes.data.length));
-                AsyncStorage.setItem('cache_asistencias_detalle', JSON.stringify(asistRes.data));
+                Storage.setItem('racha_usuario', String(asistRes.data.length));
+                Storage.setItem('cache_asistencias_detalle', JSON.stringify(asistRes.data));
                 console.log(`[SUPABASE] Racha del usuario: ${asistRes.data.length} asistencias.`);
             }
             if (actionsRes?.data?.valor) {
                 setHomeActions(actionsRes.data.valor);
-                AsyncStorage.setItem('cache_home_actions', JSON.stringify(actionsRes.data.valor));
+                Storage.setItem('cache_home_actions', JSON.stringify(actionsRes.data.valor));
                 console.log('[SUPABASE] Acciones del Home actualizadas.');
             }
             console.log('[SUPABASE] Sincronización finalizada exitosamente.');

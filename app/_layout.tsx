@@ -9,9 +9,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
 import { Stack, useRootNavigationState, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Updates from 'expo-updates';
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { AppProvider, useApp } from '../context/AppContext';
 
 // Mantenemos la splash screen visible mientras cargamos recursos (fuentes, sesión, etc)
@@ -44,8 +46,6 @@ export default function Layout() {
     async function prepare() {
       try {
         if (fontsLoaded || fontError) {
-          // Pequeño respiro de seguridad para que el motor nativo se estabilice
-          await new Promise(resolve => setTimeout(resolve, 300));
           setIsReady(true);
           await SplashScreen.hideAsync().catch(() => { });
         }
@@ -56,6 +56,26 @@ export default function Layout() {
     }
     prepare();
   }, [fontsLoaded, fontError]);
+
+  React.useEffect(() => {
+    async function onFetchUpdateAsync() {
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          console.log('[UPDATES] Descargando nueva versión OTA...');
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync();
+        }
+      } catch (error) {
+        console.warn(`[UPDATES] Error revisando actualización: ${error}`);
+      }
+    }
+
+    // Solo verificar actualizaciones al aire (Over the Air) cuando estamos en producción
+    if (!__DEV__) {
+      onFetchUpdateAsync();
+    }
+  }, []);
 
   if (fontError) {
     console.error("[LAYOUT] Error cargando fuentes:", fontError);
@@ -68,13 +88,15 @@ export default function Layout() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#000' }}>
-      <QueryClientProvider client={queryClient}>
-        <SafeAreaProvider>
-          <AppProvider>
-            <RootLayoutNav />
-          </AppProvider>
-        </SafeAreaProvider>
-      </QueryClientProvider>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <SafeAreaProvider>
+            <AppProvider>
+              <RootLayoutNav />
+            </AppProvider>
+          </SafeAreaProvider>
+        </QueryClientProvider>
+      </ErrorBoundary>
     </View>
   );
 }
